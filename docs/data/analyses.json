@@ -9710,5 +9710,37 @@
     ],
     "score": 7,
     "created_at": "2025-09-02T05:28:29.777187"
+  },
+  {
+    "paper_id": "openreview_lIf7grAC7n",
+    "category": "Agent Collaboration",
+    "labels": [
+      "fine-tune"
+    ],
+    "summary": "This paper introduces MALT (Multi-Agent LLM Training), a novel post-training strategy to improve the reasoning capabilities of Large Language Models (LLMs). The core problem addressed is that single-pass LLMs struggle with complex, multi-step tasks that require exploration and self-correction. MALT decomposes the reasoning process into a sequential pipeline of three specialized agents: a Generator, a Verifier, and a Refiner. To train these agents without human supervision, the method first generates a large search tree of reasoning trajectories by sampling from each agent. It then uses a value iteration technique to propagate a binary reward signal (based on the final answer's correctness) backward through the tree, automatically assigning credit or blame to each intermediate step. This creates a large-scale dataset of positive and negative examples for each agent's role, which is then used for post-training via Supervised Fine-Tuning (SFT) and Direct Preference Optimization (DPO). Experiments on MATH, GSM8K, and CSQA show that MALT significantly outperforms the baseline LLM and other fine-tuning approaches, demonstrating the effectiveness of training specialized agents for collaborative problem-solving.",
+    "key_insights": [
+      "Decomposing complex reasoning into a multi-agent pipeline of a generator, verifier, and refiner is an effective strategy for improving LLM performance.",
+      "It is possible to automatically generate large-scale, role-specific training data for multi-agent systems without human or teacher-model supervision.",
+      "A search-tree expansion combined with a value-iteration-based credit assignment can effectively label intermediate reasoning steps based solely on the final outcome's correctness.",
+      "Training agents on both positive and negative reasoning trajectories using a combination of SFT and DPO enables them to specialize in their roles and learn to self-correct.",
+      "The proposed generate-verify-refine structure leads to consistent, turn-by-turn improvements in accuracy, validating the contribution of each specialized agent.",
+      "MALT demonstrates strong self-correction capabilities, converting incorrect answers to correct ones at a much higher rate than it introduces new errors."
+    ],
+    "pros": [
+      "The method for automated data generation and credit assignment is novel and eliminates the need for expensive human annotation or powerful oracle models.",
+      "The paper demonstrates significant and consistent performance improvements across multiple challenging reasoning benchmarks (MATH, GSM8K, CSQA).",
+      "The approach is well-grounded with a theoretical justification for the credit assignment strategy, showing monotonic improvement in expected reward.",
+      "The modular multi-agent design is intuitive and allows for clear analysis of how each component contributes to the overall performance.",
+      "Thorough ablations validate the importance of each agent (G, V, R) and the effectiveness of the full training pipeline (SFT+DPO)."
+    ],
+    "cons": [
+      "The data generation process, which creates n^3 trajectories per question, is computationally expensive and may be difficult to scale.",
+      "The methodology is presented as an offline post-training process, which may not be suitable for online learning or continuous adaptation without re-running the entire pipeline.",
+      "The credit assignment process relies on the existence of a ground-truth training set to provide the final reward signal, limiting its use for tasks without objective answers.",
+      "The paper evaluates on subsets of the test sets due to computational constraints, which may slightly limit the generalizability of the reported results.",
+      "The architecture is fixed to a specific three-agent sequential pipeline; the optimality of this structure over other possible multi-agent configurations is not explored."
+    ],
+    "score": 7,
+    "created_at": "2025-09-02T05:29:12.521394"
   }
 ]

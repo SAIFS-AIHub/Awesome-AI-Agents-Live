@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Language" content="en">
     <title>Agent Survey — Analyzed Papers Catalog</title>
     <style>
         * { box-sizing: border-box; }
@@ -54,6 +55,11 @@
         /* Placeholder color for inputs */
         .search-input::placeholder { color: var(--text-muted); }
         input[type=date]::-webkit-calendar-picker-indicator { filter: invert(1); }
+        
+        /* Force English locale for date picker */
+        input[type=date] { 
+            -webkit-locale: 'en-US';
+        }
         
         /* Input focus state */
         .search-input:focus, input[type=date]:focus { outline: none; border-color: var(--accent-color); box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1); }
@@ -185,8 +191,8 @@
                 <input id="start" type="date" />
                 <input id="end" type="date" />
                 <div class="sort-buttons">
-                    <button id="sort-composite" class="sort-btn active" data-sort="composite">Composite</button>
-                    <button id="sort-relevance" class="sort-btn" data-sort="relevance">Relevance</button>
+                    <button id="sort-composite" class="sort-btn" data-sort="composite" style="display: none;">Composite</button>
+                    <button id="sort-relevance" class="sort-btn active" data-sort="relevance">Relevance</button>
                     <button id="sort-desc" class="sort-btn" data-sort="desc">Newest</button>
                     <button id="sort-asc" class="sort-btn" data-sort="asc">Oldest</button>
                 </div>
@@ -586,6 +592,11 @@ function countPapersWithTerm(term) {
 }
 
         window.addEventListener('load', async () => {
+            // Force English locale for date inputs
+            document.querySelectorAll('input[type="date"]').forEach(input => {
+                input.setAttribute('lang', 'en-US');
+            });
+            
             // Restore saved theme
             const savedTheme = localStorage.getItem('selected-theme') || 'beige';
             switchTheme(savedTheme);
@@ -746,7 +757,7 @@ function render() {
   const ed = document.getElementById('end').value;
   // Get current sort selection
   const activeSortBtn = document.querySelector('.sort-btn.active');
-  const sort = activeSortBtn ? activeSortBtn.getAttribute('data-sort') : 'composite';
+  const sort = activeSortBtn ? activeSortBtn.getAttribute('data-sort') : 'relevance';
 
   // Build query key and reset caches if changed
   const key = JSON.stringify({ q, sd, ed, sort, cats:[...SELECTED_CATS], tags:[...SELECTED_TAGS] });
@@ -850,7 +861,7 @@ function showList(unAnalyzed = [], onlyUn = false){
   const q = (document.getElementById('q').value || '').toLowerCase().trim();
   // Read current sort choice
   const activeSortBtn = document.querySelector('.sort-btn.active');
-  const sort = activeSortBtn ? activeSortBtn.getAttribute('data-sort') : 'composite';
+  const sort = activeSortBtn ? activeSortBtn.getAttribute('data-sort') : 'relevance';
   // Explicitly override CSS #detailView { display: none; }
   detailEl.style.display = 'none';
   listEl.style.display = 'block';
@@ -871,7 +882,7 @@ function showList(unAnalyzed = [], onlyUn = false){
     unAnalyzed.forEach((p)=>{
       const date = fmtDate(p.published_date);
       const href = p.url ? ` href="${safe(p.url)}" target="_blank" rel="noopener"` : ' href="#"';
-      html += `<li class="title-item"><a class="title-link ext-link"${href}>${safe(p.title)}</a><div class="title-meta">${(p.authors||[]).join(', ') || 'Unknown'} · ${date || ''}</div></li>`;
+      html += `<li class="title-item"><a class="title-link ext-link"${href}>${safe(p.title)}</a><div class="title-meta">${formatAuthors(p.authors)} · ${date || ''}</div></li>`;
     });
     html += '</ul></div>';
     listEl.innerHTML = html;
@@ -904,15 +915,15 @@ function showList(unAnalyzed = [], onlyUn = false){
           newCurrentList.push(p);
           const i = newCurrentList.length - 1; // 使用新列表的索引
           const date = fmtDate(p.published_date);
-          const compositeScore = sort === 'composite' ? calculateCompositeScore(p, (document.getElementById('q').value||'').toLowerCase().trim()) : null;
-          const scoreDisplay = (compositeScore != null ? `<span class="tag" style="background:#f8fafc;color:#475569;border:1px solid #e2e8f0;">Composite: ${compositeScore.toFixed(3)}</span>` : '');
+          // Composite评分已隐藏
+          const scoreDisplay = '';
           // 显示引用数量（从 semantic_ 字段获取）
           const citationCount = (p.semantic_ && p.semantic_.citation_count != null) ? p.semantic_.citation_count : null;
           const citationDisplay = citationCount ? `<span class="tag" style="background:#f0f9ff;color:#0369a1;border:1px solid #bae6fd;">📖 ${citationCount}</span>` : '';
           const a = ANAL_MAP[p.id] || {};
           const catBadge = a.category ? `<span class="badge badge-cat">${safe(String(a.category).trim())}</span>` : '';
           const tagBadges = Array.isArray(a.labels) ? a.labels.map(t=>{ const tt = String(t).trim(); if (METHODS_TAGS.includes(tt)) return `<span class=\"badge badge-method\">${safe(tt)}</span>`; if (APP_DOMAIN_TAGS.includes(tt)) return `<span class=\"badge badge-app\">${safe(tt)}</span>`; return ''; }).filter(Boolean).join(' ') : '';
-          html += `<li class="title-item"><a class="title-link" href="#" data-idx="${i}" onclick="return __sd(this)">${safe(p.title)}</a><div class="title-meta">${catBadge}${tagBadges}${(p.authors||[]).join(', ') || 'Unknown'} · ${date || ''} ${scoreDisplay} ${citationDisplay}</div></li>`;
+          html += `<li class="title-item"><a class="title-link" href="#" data-idx="${i}" onclick="return __sd(this)">${safe(p.title)}</a><div class="title-meta">${catBadge}${tagBadges}${formatAuthors(p.authors)} · ${date || ''} ${scoreDisplay} ${citationDisplay}</div></li>`;
         });
         html += `</ul></div>`;
       });
@@ -925,14 +936,13 @@ function showList(unAnalyzed = [], onlyUn = false){
         const a = ANAL_MAP[p.id] || {};
         const cat = (a.category && String(a.category).trim()) || 'Uncategorized';
         const date = fmtDate(p.published_date);
-        const relevanceScore = null; // do not display BM25 score
-        const compositeScore = sort === 'composite' ? calculateCompositeScore(p, q) : null;
-        const scoreDisplay = (compositeScore != null ? `<span class="tag" style="background:#f8fafc;color:#475569;border:1px solid #e2e8f0;">Composite: ${compositeScore.toFixed(3)}</span>` : '');
+  // Composite评分已隐藏
+  const scoreDisplay = '';
         // 显示引用数量（从 semantic_ 字段获取）
         const citationCount = (p.semantic_ && p.semantic_.citation_count != null) ? p.semantic_.citation_count : null;
         const citationDisplay = citationCount ? `<span class="tag" style="background:#f0f9ff;color:#0369a1;border:1px solid #bae6fd;">📖 ${citationCount}</span>` : '';
         const tagBadges = Array.isArray(a.labels) ? a.labels.map(t=>{ const tt = String(t).trim(); if (METHODS_TAGS.includes(tt)) return `<span class=\"badge badge-method\">${safe(tt)}</span>`; if (APP_DOMAIN_TAGS.includes(tt)) return `<span class=\"badge badge-app\">${safe(tt)}</span>`; return ''; }).filter(Boolean).join(' ') : '';
-        html += `<div class="title-item"><a class="title-link" href="#" data-idx="${newIndex}" onclick="return __sd(this)">${safe(p.title)}</a><div class="title-meta"><span class="badge badge-cat">${safe(cat)}</span> ${tagBadges} · ${(p.authors||[]).join(', ') || 'Unknown'} · ${date || ''} ${scoreDisplay} ${citationDisplay}</div></div>`;
+        html += `<div class="title-item"><a class="title-link" href="#" data-idx="${newIndex}" onclick="return __sd(this)">${safe(p.title)}</a><div class="title-meta"><span class="badge badge-cat">${safe(cat)}</span> ${tagBadges} · ${formatAuthors(p.authors)} · ${date || ''} ${scoreDisplay} ${citationDisplay}</div></div>`;
       });
       html += '</div>';
     }
@@ -944,7 +954,7 @@ function showList(unAnalyzed = [], onlyUn = false){
     unAnalyzed.forEach((p)=>{
       const date = fmtDate(p.published_date);
       const href = p.url ? ` href="${safe(p.url)}" target="_blank" rel="noopener"` : ' href="#"';
-      html += `<li class="title-item"><a class="title-link ext-link"${href}>${safe(p.title)}</a><div class="title-meta">${(p.authors||[]).join(', ') || 'Unknown'} · ${date || ''}</div></li>`;
+      html += `<li class="title-item"><a class="title-link ext-link"${href}>${safe(p.title)}</a><div class="title-meta">${formatAuthors(p.authors)} · ${date || ''}</div></li>`;
     });
     html += `</ul></div>`;
   }
@@ -1006,7 +1016,7 @@ function showDetail(index){
     const citationDisplay = citationCount ? `<span class="badge" style="background:#f0f9ff;color:#0369a1;border:1px solid #bae6fd;">📖 ${citationCount}</span>` : '';
     const body = `
       <h2>${safe(p.title)}</h2>
-      <div class="meta">${(p.authors||[]).join(', ') || 'Unknown'} · <span class="badge badge-cat">${safe(cat)}</span> ${labelsBadges} · ${date || ''} ${citationDisplay} · <a href="${safe(p.url)}" target="_blank">Original Link ↗</a></div>
+      <div class="meta">${formatAuthors(p.authors)} · <span class="badge badge-cat">${safe(cat)}</span> ${labelsBadges} · ${date || ''} ${citationDisplay} · <a href="${safe(p.url)}" target="_blank">Original Link ↗</a></div>
     <div class="section">
       ${a.summary ? `<p><strong>Summary:</strong> ${safe(a.summary)}</p>` : ''}
       ${Array.isArray(a.key_insights) && a.key_insights.length ? `<p><strong>Key Insights:</strong></p><ul>${a.key_insights.map(x=>`<li>${safe(x)}</li>`).join('')}</ul>` : ''}
@@ -1043,6 +1053,11 @@ function stepDetail(delta){ const i = CURRENT_INDEX + delta; if (i>=0 && i<CURRE
 function getDate(iso) { try { return iso ? new Date(iso) : null; } catch { return null; } }
 function fmtDate(iso) { const d = getDate(iso); if (!d) return ''; const y = d.getUTCFullYear(); const m = String(d.getUTCMonth()+1).padStart(2,'0'); const da = String(d.getUTCDate()).padStart(2,'0'); return `${y}-${m}-${da}`; }
 function safe(s) { if (s == null) return ''; return String(s).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;'); }
+function formatAuthors(authors) { 
+  if (!authors || !Array.isArray(authors) || authors.length === 0) return 'Unknown';
+  if (authors.length <= 20) return authors.join(', ');
+  return authors.slice(0, 20).join(', ') + '...';
+}
 function debounce(fn, ms){ let t; return (...a)=>{ clearTimeout(t); t=setTimeout(()=>fn.apply(null,a), ms); } }
 
 // Render right mini TOC
