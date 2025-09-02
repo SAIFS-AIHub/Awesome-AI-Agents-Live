@@ -1,0 +1,1191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agent Survey — Analyzed Papers Catalog</title>
+    <style>
+        * { box-sizing: border-box; }
+        body { margin: 0; color: var(--text-primary); background: var(--bg-primary); transition: all 0.3s ease; }
+        /* Try to avoid browser-level back/forward swipe (partially supported) */
+        body { overscroll-behavior-x: contain; }
+        
+        /* Theme switching transitions */
+        .container, .card, .toc, .tags, .papers, .reader, 
+        .search-input, input[type=date], .sort-btn, .chip, .badge,
+        .title-link, .title-meta, .btn { transition: all 0.3s ease; }
+        
+        :root { 
+            --sans: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', Roboto, Arial, sans-serif; 
+            --serif: Georgia, 'Times New Roman', serif;
+            /* Default beige theme */
+            --bg-primary: #f6f6f2;
+            --bg-secondary: #fafaf8;
+            --bg-card: #ffffff;
+            --bg-input: #ffffff;
+            --text-primary: #1f2937;
+            --text-secondary: #374151;
+            --text-muted: #6b7280;
+            --border-color: #e5e7eb;
+            --accent-color: #2f5cf0;
+            --accent-hover: #1d4ed8;
+            --cat-primary: #4c1d95;
+            --cat-secondary: #7c3aed;
+            --method-primary: #1e3a8a;
+            --method-secondary: #3b82f6;
+            --app-primary: #9a3412;
+            --app-secondary: #ea580c;
+        }
+        .container { max-width: 1100px; margin: 0 auto; padding: 28px 18px; }
+        .header { text-align: center; margin-bottom: 18px; font-family: var(--sans); }
+        .header h1 { margin: 6px 0; font-size: 30px; letter-spacing: 0.2px; color: var(--text-primary); }
+        .header p { margin: 0; color: var(--text-muted); }
+
+        .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin: 14px 0; }
+        .card { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; padding: 14px; font-family: var(--sans); box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3); }
+        .card h3 { margin: 0 0 6px; font-size: 14px; color: var(--text-secondary); font-weight: 600; }
+        .num { font-size: 22px; font-weight: 700; color: var(--accent-color); text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3); }
+
+        .bar.card { display: grid; gap: 10px; margin-bottom: 16px; }
+        .row { display: flex; flex-wrap: wrap; gap: 10px; }
+        .search-input, input[type=date] { padding: 10px 12px; border: 1px solid var(--border-color); border-radius: 10px; background: var(--bg-input); color: var(--text-primary); font-size: 14px; font-family: var(--sans); transition: all 0.2s ease; }
+        .search-input { flex: 1; min-width: 240px; }
+        
+        /* Placeholder color for inputs */
+        .search-input::placeholder { color: var(--text-muted); }
+        input[type=date]::-webkit-calendar-picker-indicator { filter: invert(1); }
+        
+        /* Input focus state */
+        .search-input:focus, input[type=date]:focus { outline: none; border-color: var(--accent-color); box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1); }
+        
+        /* Sort buttons */
+        .sort-buttons { display: flex; gap: 4px; }
+        .sort-btn { padding: 8px 12px; border: 1px solid var(--border-color); background: var(--bg-input); color: var(--text-primary); border-radius: 8px; cursor: pointer; font-size: 13px; font-family: var(--sans); transition: all 0.2s; }
+        .sort-btn:hover { background: var(--bg-secondary); border-color: var(--text-muted); }
+        .sort-btn.active { background: var(--accent-color); color: var(--text-primary); border-color: var(--accent-color); }
+        
+        /* Theme selector */
+        .theme-selector { display: flex; align-items: center; gap: 8px; }
+        .theme-label { font-size: 13px; color: var(--text-secondary); font-weight: 500; }
+        .color-picker { display: flex; gap: 8px; align-items: center; }
+        .color-circle { width: 28px; height: 28px; border-radius: 50%; border: 2px solid var(--border-color); cursor: pointer; transition: all 0.2s; position: relative; }
+        .color-circle:hover { transform: scale(1.1); border-color: var(--accent-color); }
+        .color-circle.active { border-color: var(--accent-color); box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3); }
+        .color-circle::after { content: '✓'; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: var(--accent-color); font-weight: bold; font-size: 14px; opacity: 0; transition: opacity 0.2s; }
+        .color-circle.active::after { opacity: 1; }
+
+        .toc { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; padding: 12px; font-family: var(--sans); }
+        .toc-title { font-weight: 600; margin-bottom: 8px; color: var(--text-primary); }
+        .toc-list { display: flex; flex-wrap: wrap; gap: 8px; }
+        .chip { padding: 6px 10px; border-radius: 16px; background: var(--bg-secondary); color: var(--text-secondary); cursor: pointer; font-size: 12px; border: 1px solid var(--border-color); user-select: none; transition: all 0.2s ease; }
+        .chip:hover { background: var(--bg-input); color: var(--text-primary); transform: translateY(-1px); box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2); }
+        .chip.active { background: var(--accent-color); color: var(--text-primary); border-color: var(--accent-color); box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3); }
+        /* Category chips: light purple (increase specificity to override .chip) */
+        .chip.cat-chip { background: #e9d5ff; color: var(--cat-primary); border-color: var(--cat-primary); }
+        .chip.cat-chip.active { background: var(--cat-primary); color: #ffffff; border-color: var(--cat-primary); }
+        /* Tags bar separate card */
+        .tags { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; padding: 12px; font-family: var(--sans); margin-top: 0; margin-bottom: 16px; }
+        .tags .toc-title { margin-bottom: 6px; }
+        .tags .toc-list { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 6px; }
+        .tag-chip { background: #eff6ff; color: #1e40af; border-color: #bfdbfe; }
+        .tag-chip.active { background: #3b82f6; color: #ffffff; border-color: #3b82f6; }
+        /* Methods chips: light blue with stronger active state */
+        .tag-chip.method { background: #eff6ff; color: #1e40af; border-color: #bfdbfe; }
+        .tag-chip.method.active { background: #3b82f6; color: #ffffff; border-color: #3b82f6; font-weight: 600; }
+        .tag-chip.app { background: #fff7ed; color: #9a3412; border-color: #fed7aa; }
+        .tag-chip.app.active { background: #ea580c; color: #ffffff; border-color: #ea580c; }
+        /* Badge styles inside list */
+        .badge { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 12px; margin-right: 6px; }
+        /* Category badges: light purple (increase specificity) */
+        .badge.badge-cat { background: #e9d5ff; color: var(--cat-primary); border: 1px solid var(--cat-primary); }
+        /* Method tags: light blue - align with tags above */
+        .badge-method { background: #eff6ff; color: #1e40af; border: 1px solid #bfdbfe; }
+        /* App domain tags: light orange - align with tags above */
+        .badge-app { background: #fff7ed; color: #9a3412; border: 1px solid #fed7aa; }
+        /* Make tags bar stack vertically regardless of .toc-list default */
+        #tagsBar { display: block; }
+
+        .papers { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; overflow: hidden; }
+        .papers-header { padding: 14px; border-bottom: 1px solid var(--border-color); background: var(--bg-secondary); font-weight: 600; font-family: var(--sans); color: var(--text-primary); }
+
+        /* List view */
+        #listView { padding: 8px 0; }
+        .title-index { padding: 10px 18px 4px; font-family: var(--serif); }
+        .title-index h4 { margin: 0 0 6px; font-family: var(--sans); font-size: 14px; color: var(--text-primary); }
+        .title-index ol { margin: 0 0 10px 20px; padding: 0; }
+        .title-index li { margin: 4px 0; }
+        .title-index a { color: var(--text-primary); text-decoration: none; }
+        .title-index a:hover { color: var(--accent-color); }
+        .cat-section { padding: 8px 18px 6px; border-top: 1px solid var(--border-color); }
+        .cat-title { font-family: var(--sans); font-weight: 600; color: var(--text-primary); margin: 10px 0 6px; }
+        .title-list { list-style: none; padding: 0 18px 10px; margin: 0; }
+        .title-item { padding: 8px 0; border-bottom: 1px dashed var(--border-color); }
+        .title-item:last-child { border-bottom: none; }
+        .title-link { font-family: var(--serif); font-size: 17px; color: var(--text-primary); text-decoration: none; font-weight: 500; }
+        .title-link:hover { color: var(--accent-color); text-decoration: underline; }
+        .title-meta { margin-top: 4px; font-size: 12px; color: var(--text-secondary); font-family: var(--sans); line-height: 1.4; }
+        .tag { display: inline-block; padding: 1px 8px; border-radius: 12px; background: var(--bg-secondary); color: var(--text-secondary); font-size: 12px; font-family: var(--sans); font-weight: 500; }
+
+        /* Detail view */
+        #detailView { display: none; padding: 18px; }
+        .reader { max-width: 820px; margin: 0 auto; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 14px; padding: 28px; }
+        /* Constrain horizontal gestures to page to reduce browser back triggers */
+        .reader { touch-action: pan-y; overscroll-behavior-x: contain; }
+        .reader h2 { font-family: var(--serif); font-size: 26px; margin: 0 0 6px; line-height: 1.3; color: var(--text-primary); }
+        .reader .meta { font-family: var(--sans); color: var(--text-muted); margin-bottom: 16px; }
+        .reader .section { font-family: var(--serif); font-size: 16px; line-height: 1.8; color: var(--text-primary); }
+        .reader .section p { margin: 10px 0; }
+        .navline { display: flex; justify-content: space-between; gap: 10px; margin-top: 18px; font-family: var(--sans); }
+        .btn { padding: 10px 12px; border: 1px solid var(--border-color); background: var(--bg-input); color: var(--text-primary); border-radius: 10px; cursor: pointer; }
+        .btn:hover { background: var(--bg-secondary); }
+
+        .loading { padding: 24px; text-align: center; color: var(--text-muted); }
+        
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: var(--bg-secondary); }
+        ::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+        /* Right mini TOC */
+        .mini-toc { position: fixed; top: 100px; right: 16px; width: 280px; max-height: 70vh; overflow: visible; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.3); padding: 10px; font-family: var(--sans); z-index: 50; }
+        .mini-toc .mini-toc-title { font-weight: 600; font-size: 13px; color: var(--text-secondary); margin: 4px 0 8px; }
+        .mini-toc .mini-toc-list { list-style: none; padding: 0; margin: 0; }
+        .mini-toc .mini-toc-item { margin: 6px 0; }
+        .mini-toc .mini-toc-link { display: block; text-decoration: none; color: var(--text-primary); font-size: 12px; line-height: 1.4; padding: 4px 6px; border-radius: 8px; }
+        .mini-toc .mini-toc-link:hover { background: var(--bg-secondary); color: var(--accent-color); }
+        .mini-toc .mini-toc-link.active { background: var(--accent-color); color: var(--text-primary); }
+        .mini-toc .mini-toc-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+        .mini-toc .mini-toc-scroll { max-height: 66vh; overflow: auto; }
+        /* Left side hide tab */
+        .mini-toc { position: fixed; }
+        .mini-toc .mini-toc-hide-tab { position: absolute; left: -14px; top: 50%; transform: translateY(-50%); width: 14px; height: 56px; border: 1px solid var(--border-color); border-right: none; background: var(--bg-card); color: var(--text-secondary); border-radius: 8px 0 0 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: -2px 2px 4px rgba(0,0,0,0.08); }
+        .mini-toc .mini-toc-hide-tab:hover { background: var(--bg-secondary); color: var(--accent-color); }
+        .mini-toc .mini-toc-hide-tab .arrow { font-size: 14px; line-height: 1; }
+        .mini-toc-toggle { position: fixed; right: 16px; top: 64px; z-index: 51; border: 1px solid var(--border-color); background: var(--bg-card); color: var(--text-primary); border-radius: 999px; padding: 6px 10px; font-size: 12px; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+        .mini-toc-toggle:hover { background: var(--bg-secondary); }
+        @media (max-width: 960px) { .mini-toc { display: none !important; } }
+        @media (max-width: 720px) { .row { flex-direction: column; } .reader { padding: 18px; } }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Awesome LLM-based Agent Live</h1>
+        </div>
+        
+        <div class="stats">
+            <div class="card"><h3>Total Papers</h3><div class="num" id="statTotal">-</div></div>
+            <div class="card"><h3>Analyzed</h3><div class="num" id="statAnalyzed">-</div></div>
+            <div class="card"><h3>Categories</h3><div class="num" id="statCats">-</div></div>
+        </div>
+        
+        <div class="bar card">
+            <div class="row">
+                <input id="q" class="search-input" placeholder="Search: title / author / keywords..." />
+                <input id="start" type="date" />
+                <input id="end" type="date" />
+                <div class="sort-buttons">
+                    <button id="sort-composite" class="sort-btn active" data-sort="composite">Composite</button>
+                    <button id="sort-relevance" class="sort-btn" data-sort="relevance">Relevance</button>
+                    <button id="sort-desc" class="sort-btn" data-sort="desc">Newest</button>
+                    <button id="sort-asc" class="sort-btn" data-sort="asc">Oldest</button>
+                </div>
+                <div class="theme-selector">
+                    <span class="theme-label">Theme:</span>
+                    <div class="color-picker">
+                        <div class="color-circle active" data-theme="beige" style="background: linear-gradient(45deg, #f6f6f2 50%, #fafaf8 50%);" title="Beige"></div>
+                        <div class="color-circle" data-theme="warm" style="background: linear-gradient(45deg, #fef3c7 50%, #fde68a 50%);" title="Warm"></div>
+                        <div class="color-circle" data-theme="dark" style="background: linear-gradient(45deg, #111827 50%, #1f2937 50%);" title="Dark"></div>
+                        <div class="color-circle" data-theme="blue" style="background: linear-gradient(45deg, #dbeafe 50%, #bfdbfe 50%);" title="Blue"></div>
+                        <div class="color-circle" data-theme="pink" style="background: linear-gradient(45deg, #fce7f3 50%, #fbcfe8 50%);" title="Pink"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="toc">
+            <div class="toc-title">📖 Table of Contents (by Category)</div>
+            <div id="toc" class="toc-list"></div>
+        </div>
+        <div class="tags">
+            <div class="toc-title">🏷️ Tags</div>
+            <div id="tagsBar"></div>
+        </div>
+
+        <div class="papers">
+            <div class="papers-header" id="papersHeader">📚 Analyzed Papers</div>
+            <div id="listView"><div class="loading">Loading data...</div></div>
+            <div id="detailView">
+                <div class="reader">
+                    <div class="navline" style="margin-bottom:12px;">
+                        <button class="btn" id="backBtn">← Back to List</button>
+                        <div style="flex:1"></div>
+                        <button class="btn" id="prevBtn">← Previous</button>
+                        <button class="btn" id="nextBtn">Next →</button>
+                    </div>
+                    <div id="detailBody"></div>
+                    <div class="navline">
+                        <button class="btn" id="backBtnBottom">← Back to List</button>
+                        <div style="flex:1"></div>
+                        <button class="btn" id="prevBtnBottom">← Previous</button>
+                        <button class="btn" id="nextBtnBottom">Next →</button>
+                    </div>
+            </div>
+            <div id="miniToc" class="mini-toc" style="display:none"></div>
+            </div>
+        </div>
+    </div>
+    <button id="miniTocToggle" class="mini-toc-toggle" style="display:none" aria-label="Show TOC">❮ TOC</button>
+
+    <script>
+let PAPERS = [];
+let ANAL = {};
+let ANAL_MAP = {};
+let CURRENT_LIST = [];
+let CURRENT_INDEX = -1;
+let SELECTED_CATS = new Set();
+let SELECTED_TAGS = new Set();
+// Performance caches
+let PAPER_ID_TO_INDEX = {};
+let TITLES_LOWER = [];
+let TITLE_LENGTHS = [];
+let AVG_TITLE_LEN = 1;
+let CURRENT_QUERY_TERMS = [];
+let CURRENT_QUERY_REGEX = [];
+let CURRENT_TERM_DF = null;
+let CURRENT_QUERY_KEY = '';
+let RELEVANCE_CACHE = new Map(); // id -> relevance score
+let COMPOSITE_CACHE = new Map(); // id -> composite score
+let IDX_BY_ID = null; // id -> index in CURRENT_LIST
+// Gesture state
+let GESTURE_BOUND = false;
+let SWIPE_START_X = 0;
+let SWIPE_START_Y = 0;
+let SWIPE_START_T = 0;
+let SWIPE_LOCK_TS = 0; // throttle to avoid repeated triggers
+
+// Fixed categories (aligned with analysis prompts)
+const FIXED_CATEGORIES = [
+  "Profile Definition","Memory Mechanism","Planning Capability","Action Execution",
+  "Agent Collaboration","Agent Evolution","Benchmarks and Datasets","Applications",
+  "Tools","Security","Ethics","Survey"
+];
+// Fixed tag groups
+const METHODS_TAGS = ["fine-tune","non-fine-tune"];
+const APP_DOMAIN_TAGS = [
+  "Psychology","Political Science and Economy","Social Simulation","Jurisprudence",
+  "Research Assistant","Documentation and Data Management","Experiment Assistant",
+  "Natural Science Education","CS & SE","Industrial Automation","Robotics & Embodied AI"
+];
+
+// Theme configuration
+const THEMES = {
+  beige: {
+    '--bg-primary': '#f6f6f2',
+    '--bg-secondary': '#fafaf8',
+    '--bg-card': '#ffffff',
+    '--bg-input': '#ffffff',
+    '--text-primary': '#1f2937',
+    '--text-secondary': '#374151',
+    '--text-muted': '#6b7280',
+    '--border-color': '#e5e7eb',
+    '--accent-color': '#2f5cf0',
+    '--accent-hover': '#1d4ed8',
+    '--cat-primary': '#4c1d95',
+    '--cat-secondary': '#7c3aed',
+    '--method-primary': '#1e3a8a',
+    '--method-secondary': '#3b82f6',
+    '--app-primary': '#9a3412',
+    '--app-secondary': '#ea580c'
+  },
+  warm: {
+    '--bg-primary': '#fef3c7',
+    '--bg-secondary': '#fde68a',
+    '--bg-card': '#fefce8',
+    '--bg-input': '#fefce8',
+    '--text-primary': '#451a03',
+    '--text-secondary': '#92400e',
+    '--text-muted': '#a16207',
+    '--border-color': '#f59e0b',
+    '--accent-color': '#ea580c',
+    '--accent-hover': '#c2410c',
+    '--cat-primary': '#4c1d95',
+    '--cat-secondary': '#7c3aed',
+    '--method-primary': '#1e3a8a',
+    '--method-secondary': '#3b82f6',
+    '--app-primary': '#9a3412',
+    '--app-secondary': '#ea580c'
+  },
+  dark: {
+    '--bg-primary': '#111827',
+    '--bg-secondary': '#1f2937',
+    '--bg-card': '#374151',
+    '--bg-input': '#4b5563',
+    '--text-primary': '#ffffff',
+    '--text-secondary': '#e5e7eb',
+    '--text-muted': '#d1d5db',
+    '--border-color': '#4b5563',
+    '--accent-color': '#3b82f6',
+    '--accent-hover': '#2563eb',
+    '--cat-primary': '#4c1d95',
+    '--cat-secondary': '#7c3aed',
+    '--method-primary': '#1e3a8a',
+    '--method-secondary': '#3b82f6',
+    '--app-primary': '#9a3412',
+    '--app-secondary': '#ea580c'
+  },
+  blue: {
+    '--bg-primary': '#dbeafe',
+    '--bg-secondary': '#bfdbfe',
+    '--bg-card': '#eff6ff',
+    '--bg-input': '#eff6ff',
+    '--text-primary': '#1e3a8a',
+    '--text-secondary': '#1e40af',
+    '--text-muted': '#3b82f6',
+    '--border-color': '#93c5fd',
+    '--accent-color': '#1d4ed8',
+    '--accent-hover': '#1e40af',
+    '--cat-primary': '#4c1d95',
+    '--cat-secondary': '#7c3aed',
+    '--method-primary': '#1e3a8a',
+    '--method-secondary': '#3b82f6',
+    '--app-primary': '#9a3412',
+    '--app-secondary': '#ea580c'
+  },
+  pink: {
+    '--bg-primary': '#fce7f3',
+    '--bg-secondary': '#fbcfe8',
+    '--bg-card': '#fdf2f8',
+    '--bg-input': '#fdf2f8',
+    '--text-primary': '#831843',
+    '--text-secondary': '#9d174d',
+    '--text-muted': '#be185d',
+    '--border-color': '#f9a8d4',
+    '--accent-color': '#be185d',
+    '--accent-hover': '#9d174d',
+    '--cat-primary': '#4c1d95',
+    '--cat-secondary': '#7c3aed',
+    '--method-primary': '#1e3a8a',
+    '--method-secondary': '#3b82f6',
+    '--app-primary': '#9a3412',
+    '--app-secondary': '#ea580c'
+  }
+};
+
+// Theme switcher
+function switchTheme(themeName) {
+  const theme = THEMES[themeName];
+  if (!theme) return;
+  
+  Object.entries(theme).forEach(([property, value]) => {
+    document.documentElement.style.setProperty(property, value);
+  });
+  
+  // Save theme selection to local storage
+  localStorage.setItem('selected-theme', themeName);
+}
+
+// Composite sort weights (browse/search, aligned with backend PaperRanker)
+const DEFAULT_WEIGHTS_WITH_QUALITY_BROWSE = { relevance: 0.0, time: 0.1, quality: 0.25, citation: 0.65 };
+const DEFAULT_WEIGHTS_NO_QUALITY_BROWSE    = { relevance: 0.0, time: 0.15, quality: 0.0, citation: 0.85 };
+const DEFAULT_WEIGHTS_WITH_QUALITY_SEARCH = { relevance: 0.4, time: 0.1, quality: 0.2, citation: 0.3 };
+const DEFAULT_WEIGHTS_NO_QUALITY_SEARCH    = { relevance: 0.5, time: 0.1, quality: 0.0, citation: 0.4 };
+
+// Relevance calculation
+function calculateRelevance(paper, query) {
+  if (!query) return 0; // no query -> relevance is 0
+  
+  const a = ANAL_MAP[paper.id] || {};
+  let score = 0;
+  
+  // Title match has the highest weight
+  if (paper.title && paper.title.toLowerCase().includes(query)) {
+    score += 10;
+    // Extra if the title starts with the query
+    if (paper.title.toLowerCase().startsWith(query)) {
+      score += 5;
+    }
+  }
+  
+  // Author match
+  if (paper.authors) {
+    const authorMatch = paper.authors.some(author => 
+      author.toLowerCase().includes(query)
+    );
+    if (authorMatch) score += 3;
+  }
+  
+  // Analysis fields match (summary/key_insights/pros/cons only)
+  if (a.summary && String(a.summary).toLowerCase().includes(query)) score += 2;
+  if (Array.isArray(a.key_insights)) {
+    const hit = a.key_insights.some(x => String(x).toLowerCase().includes(query));
+    if (hit) score += 2;
+  }
+  if (Array.isArray(a.pros)) {
+    const hit = a.pros.some(x => String(x).toLowerCase().includes(query));
+    if (hit) score += 2;
+  }
+  if (Array.isArray(a.cons)) {
+    const hit = a.cons.some(x => String(x).toLowerCase().includes(query));
+    if (hit) score += 2;
+  }
+  
+  // Category match
+  if (a.category && a.category.toLowerCase().includes(query)) score += 1;
+  
+  // Multi-term query: accumulate per-term hits
+  const queryWords = query.split(/\s+/).filter(word => word.length > 1);
+  if (queryWords.length > 1) {
+    const allText = [paper.title, ...(paper.authors || []), a.summary, ...(Array.isArray(a.key_insights)?a.key_insights:[]), ...(Array.isArray(a.pros)?a.pros:[]), ...(Array.isArray(a.cons)?a.cons:[])]
+      .filter(Boolean).join(' ').toLowerCase();
+    
+    queryWords.forEach(word => {
+      if (allText.includes(word)) score += 1;
+    });
+  }
+  
+  return score;
+}
+
+// BM25 implementation - title only
+function calculateBM25Relevance(paper, query) {
+  if (!query || !paper.title) return 0;
+  
+  // BM25 parameters
+  const k1 = 1.2;  // term frequency saturation
+  const b = 0.75;  // length normalization
+  const avgdl = calculateAverageTitleLength(); // average title length
+  
+  const title = paper.title.toLowerCase();
+  const titleLength = title.split(/\s+/).length;
+  const queryTerms = query.toLowerCase().split(/\s+/).filter(term => term.length > 1);
+  
+  let score = 0;
+  
+  queryTerms.forEach(term => {
+    // term frequency (tf)
+    const tf = (title.match(new RegExp(term, 'g')) || []).length;
+    
+    // inverse document frequency (idf) - simplified
+    const idf = Math.log((PAPERS.length + 1) / (countPapersWithTerm(term) + 0.5));
+    
+    // BM25 formula
+    const numerator = tf * (k1 + 1);
+    const denominator = tf + k1 * (1 - b + b * (titleLength / avgdl));
+    const bm25Score = idf * (numerator / denominator);
+    
+    score += bm25Score;
+  });
+  
+  return score;
+}
+
+// Compute average title length
+function calculateAverageTitleLength() {
+  if (PAPERS.length === 0) return 1;
+  
+  const totalLength = PAPERS.reduce((sum, paper) => {
+    return sum + (paper.title ? paper.title.split(/\s+/).length : 0);
+  }, 0);
+  
+  return totalLength / PAPERS.length;
+}
+
+// ========== Composite score: locally computable dimensions (excluding relevance) ==========
+function calculateTimeScore(published) {
+  if (!published) return 0.5;
+  const d = getDate(published);
+  if (!d) return 0.5;
+  const now = new Date();
+  const months = (now.getFullYear() - d.getFullYear()) * 12 + (now.getMonth() - d.getMonth());
+  const timeScore = Math.exp(-0.1 * Math.max(0, months));
+  return Math.max(0, Math.min(1, timeScore));
+}
+
+function calculateQualityScore(llmScore) {
+  if (llmScore == null || isNaN(llmScore)) return null;
+  return Math.max(0, Math.min(1, Number(llmScore) / 10));
+}
+
+function calculateCitationScore(citationCount) {
+  // Missing/invalid treated as 0 (no weight redistribution)
+  if (citationCount == null) return 0;
+  const c = Number(citationCount);
+  if (!isFinite(c)) return 0;
+  if (c <= 0) return 0;
+  return Math.max(0, Math.min(1, Math.log(1 + c) / Math.log(1001)));
+}
+
+function getCompositeWeights(hasQuality, hasQuery) {
+  if (hasQuery) {
+    return hasQuality ? { ...DEFAULT_WEIGHTS_WITH_QUALITY_SEARCH } : { ...DEFAULT_WEIGHTS_NO_QUALITY_SEARCH };
+  }
+  return hasQuality ? { ...DEFAULT_WEIGHTS_WITH_QUALITY_BROWSE } : { ...DEFAULT_WEIGHTS_NO_QUALITY_BROWSE };
+}
+
+function redistributeWeightsIfMissing(weights, missingKeys) {
+  const w = { ...weights };
+  const missing = missingKeys.filter(k => w[k] > 0);
+  if (!missing.length) return w;
+  // Redistribute missing dimension weights to remaining dimensions proportionally
+  const totalRemain = Object.entries(w)
+    .filter(([k]) => !missing.includes(k))
+    .reduce((s, [, v]) => s + v, 0);
+  missing.forEach(k => {
+    const wk = w[k];
+    w[k] = 0;
+    if (wk > 0 && totalRemain > 0) {
+      Object.keys(w).forEach(key => {
+        if (!missing.includes(key)) {
+          w[key] += wk * (w[key] / totalRemain);
+        }
+      });
+    }
+  });
+  return w;
+}
+
+function calculateCompositeScore(paper, query) {
+  const a = ANAL[paper.id] || {};
+  const hasQuality = typeof a.score === 'number';
+  const hasQuery = !!(query && String(query).trim());
+  let weights = getCompositeWeights(hasQuality, hasQuery);
+
+  let time = calculateTimeScore(paper.published_date);
+  let quality = calculateQualityScore(a.score);
+  // Citation source: prefer semantic_.citation_count, fallback to top-level citation_count
+  const sem = (paper.semantic_ || {});
+  const citationSource = (sem && (sem.citation_count != null)) ? sem.citation_count : paper.citation_count;
+  let citation = calculateCitationScore(citationSource);
+  let relevance = 0;
+  if (hasQuery) {
+    // Use inclusive weighted relevance with simple normalization (assume max score ≤ 30 to prevent excessive weighting)
+    const raw = calculateRelevance(paper, String(query).toLowerCase());
+    relevance = Math.max(0, Math.min(1, raw / 30));
+  }
+
+  const missing = [];
+  if (quality == null) { quality = 0; missing.push('quality'); }
+  // Missing citation treated as 0, no redistribution
+  if (citation == null) { citation = 0; }
+  if (missing.length) weights = redistributeWeightsIfMissing(weights, missing);
+
+  return (
+    (weights.relevance || 0) * relevance +
+    (weights.time || 0) * time +
+    (weights.quality || 0) * quality +
+    (weights.citation || 0) * citation
+  );
+}
+
+// Count papers containing term in title
+function countPapersWithTerm(term) {
+  return PAPERS.filter(paper => 
+    paper.title && paper.title.toLowerCase().includes(term)
+  ).length;
+}
+
+        window.addEventListener('load', async () => {
+            // Restore saved theme
+            const savedTheme = localStorage.getItem('selected-theme') || 'beige';
+            switchTheme(savedTheme);
+            
+            // Sync active state on theme circles
+            document.querySelectorAll('.color-circle').forEach(circle => {
+                if (circle.getAttribute('data-theme') === savedTheme) {
+                    circle.classList.add('active');
+                } else {
+                    circle.classList.remove('active');
+                }
+            });
+            
+            await loadData();
+            hydrateStats();
+            buildFiltersAndTOC();
+            render();
+            bind();
+        });
+
+        async function loadData() {
+  // Parallel load to reduce wait time
+  const [pj, aj] = await Promise.all([
+    fetch('data/papers.json').then(r => r.ok ? r.json() : []),
+    fetch('data/analyses.json').then(r => r.ok ? r.json() : {})
+  ]).catch(()=>[[],{}]);
+  PAPERS = Array.isArray(pj) ? pj : [];
+  ANAL = aj && typeof aj === 'object' ? aj : {};
+  // Support object map or array
+  if (Array.isArray(ANAL)) {
+    const tmp = {};
+    ANAL.forEach(a => { if (a && typeof a === 'object') { const pid = a.paper_id || a.id || a.paperId; if (pid) tmp[String(pid)] = a; } });
+    ANAL_MAP = tmp;
+  } else {
+    ANAL_MAP = ANAL || {};
+  }
+}
+
+function hydrateStats() {
+  document.getElementById('statTotal').textContent = String(PAPERS.length);
+  document.getElementById('statAnalyzed').textContent = String(Object.keys(ANAL_MAP).length);
+  const cats = new Set(Object.values(ANAL_MAP).map(a => a && a.category).filter(Boolean));
+  document.getElementById('statCats').textContent = String(cats.size);
+}
+
+function buildFiltersAndTOC() {
+
+  const toc = document.getElementById('toc');
+  toc.innerHTML = '';
+  // Collect present categories and intersect with fixed list; fallback to present list
+  const presentCats = new Set(Object.values(ANAL_MAP).map(a => a && a.category && String(a.category).trim()).filter(Boolean));
+  const fixedSet = new Set(FIXED_CATEGORIES);
+  const intersect = Array.from(presentCats).filter(c => fixedSet.has(c));
+  const catsToUse = intersect.length ? intersect.sort() : Array.from(presentCats).sort();
+  catsToUse.forEach(c => {
+
+    const chip = document.createElement('span'); chip.className = 'chip cat-chip'; chip.textContent = c; chip.onclick = () => { toggleCategory(c, chip); }; toc.appendChild(chip);
+  });
+  // Add virtual category "Unanalyzed" for filtering unannotated papers
+
+  const unChip = document.createElement('span'); unChip.className = 'chip cat-chip'; unChip.textContent = 'Unanalyzed'; unChip.onclick = () => { toggleCategory('Unanalyzed', unChip); }; toc.appendChild(unChip);
+
+  // Append tag filters (Methods and Application domains) into a dedicated tagsBar
+  const tagsBar = document.getElementById('tagsBar');
+  if (tagsBar) tagsBar.innerHTML = '';
+  if (tagsBar) {
+    const title1 = document.createElement('div'); title1.className = 'toc-title'; title1.textContent = 'Methods'; tagsBar.appendChild(title1);
+    const line1 = document.createElement('div'); line1.className = 'toc-list'; tagsBar.appendChild(line1);
+    METHODS_TAGS.forEach(t => { const chip = document.createElement('span'); chip.className = 'chip tag-chip method'; chip.textContent = t; chip.onclick = () => toggleTag(t, chip); line1.appendChild(chip); });
+    const title2 = document.createElement('div'); title2.className = 'toc-title'; title2.style.marginTop = '6px'; title2.textContent = 'Application domains'; tagsBar.appendChild(title2);
+    const line2 = document.createElement('div'); line2.className = 'toc-list'; tagsBar.appendChild(line2);
+    APP_DOMAIN_TAGS.forEach(t => { const chip = document.createElement('span'); chip.className = 'chip tag-chip app'; chip.textContent = t; chip.onclick = () => toggleTag(t, chip); line2.appendChild(chip); });
+  }
+}
+
+function bind() {
+  document.getElementById('q').oninput = debounce(render, 200);
+  document.getElementById('start').onchange = render;
+  document.getElementById('end').onchange = render;
+  
+  // Sort button event binding
+  document.querySelectorAll('.sort-btn').forEach(btn => {
+    btn.onclick = () => {
+      // Remove active state from all buttons
+      document.querySelectorAll('.sort-btn').forEach(b => b.classList.remove('active'));
+      // Add active state to current button
+      btn.classList.add('active');
+      // Trigger rendering
+      render();
+    };
+  });
+  
+  // Theme selector event binding
+  document.querySelectorAll('.color-circle').forEach(circle => {
+    circle.onclick = () => {
+      // Remove active state from all circles
+      document.querySelectorAll('.color-circle').forEach(c => c.classList.remove('active'));
+      // Add active state to current circle
+      circle.classList.add('active');
+      // Switch theme
+      const theme = circle.getAttribute('data-theme');
+      switchTheme(theme);
+    };
+  });
+  
+  ['backBtn','backBtnBottom'].forEach(id=> document.getElementById(id).onclick = backToList);
+  ['prevBtn','prevBtnBottom'].forEach(id=> document.getElementById(id).onclick = ()=> stepDetail(-1));
+  ['nextBtn','nextBtnBottom'].forEach(id=> document.getElementById(id).onclick = ()=> stepDetail(1));
+
+  // Event delegation for list and index clicks
+  const listContainer = document.getElementById('listView');
+  listContainer.addEventListener('click', (evt) => {
+    const anchor = evt.target.closest('a');
+    if (!anchor) return;
+    // Do not intercept external links for unanalyzed entries
+    if (anchor.classList.contains('ext-link')) return;
+    if (anchor.classList.contains('title-link') || anchor.classList.contains('idx-link')) {
+      evt.preventDefault();
+      const idxAttr = anchor.getAttribute('data-idx');
+      const i = idxAttr != null ? parseInt(idxAttr, 10) : NaN;
+      if (!Number.isNaN(i)) showDetail(i);
+    }
+  });
+}
+
+// Explicit entry for inline onclick; return false to prevent default
+function __sd(el){
+  const idxAttr = el && el.getAttribute && el.getAttribute('data-idx');
+  const i = idxAttr != null ? parseInt(idxAttr, 10) : NaN;
+  if (!Number.isNaN(i)) showDetail(i);
+  return false;
+}
+
+function toggleCategory(cat, chipEl){
+  if (SELECTED_CATS.has(cat)) SELECTED_CATS.delete(cat); else SELECTED_CATS.add(cat);
+  updateChips();
+  render();
+}
+
+function toggleTag(tag, chipEl){
+  if (SELECTED_TAGS.has(tag)) SELECTED_TAGS.delete(tag); else SELECTED_TAGS.add(tag);
+  updateChips();
+  render();
+}
+
+function updateChips(){
+  document.querySelectorAll('.cat-chip').forEach(ch=>{
+    if (SELECTED_CATS.has(ch.textContent)) ch.classList.add('active'); else ch.classList.remove('active');
+  });
+  document.querySelectorAll('.tag-chip').forEach(ch=>{
+    if (SELECTED_TAGS.has(ch.textContent)) ch.classList.add('active'); else ch.classList.remove('active');
+  });
+}
+
+function render() {
+  const q = (document.getElementById('q').value || '').toLowerCase().trim();
+  const sd = document.getElementById('start').value;
+  const ed = document.getElementById('end').value;
+  // Get current sort selection
+  const activeSortBtn = document.querySelector('.sort-btn.active');
+  const sort = activeSortBtn ? activeSortBtn.getAttribute('data-sort') : 'composite';
+
+  // Build query key and reset caches if changed
+  const key = JSON.stringify({ q, sd, ed, sort, cats:[...SELECTED_CATS], tags:[...SELECTED_TAGS] });
+  if (CURRENT_QUERY_KEY !== key) {
+    CURRENT_QUERY_KEY = key;
+    RELEVANCE_CACHE.clear();
+    COMPOSITE_CACHE.clear();
+  }
+
+  // Build two lists: analyzed and unanalyzed. Unanalyzed ignores category match; title/author only
+  const baseFilter = (p, includeAnalysisFields) => {
+    const a = ANAL_MAP[p.id] || {};
+    const textParts = [p.title, ...(p.authors||[])];
+    if (includeAnalysisFields) textParts.push(a.summary, a.key_insights && Array.isArray(a.key_insights) ? a.key_insights.join(' ') : '', a.pros && Array.isArray(a.pros) ? a.pros.join(' ') : '', a.cons && Array.isArray(a.cons) ? a.cons.join(' ') : '');
+    const blob = textParts.filter(Boolean).join(' ') || '';
+    const okQ = !q || blob.toLowerCase().includes(q);
+    // Category match only for analyzed entries (limited to fixed categories)
+    const pcs = new Set([a.category].filter(c=>FIXED_CATEGORIES.includes(c)));
+    let okC = true;
+    if (SELECTED_CATS.size) okC = [...SELECTED_CATS].some(c=>pcs.has(c));
+
+    const d = getDate(p.published_date);
+    const okS = !sd || (d && d >= new Date(sd + 'T00:00:00Z'));
+    const okE = !ed || (d && d <= new Date(ed + 'T23:59:59Z'));
+    // Tag filter: match any
+    let okT = true;
+    if (SELECTED_TAGS.size) {
+      const allowed = new Set([...METHODS_TAGS, ...APP_DOMAIN_TAGS]);
+      const labels = Array.isArray(a.labels) ? a.labels.map(x=>String(x).trim()).filter(x=>allowed.has(x)) : [];
+      okT = labels.some(t => SELECTED_TAGS.has(t));
+    }
+    return okQ && okC && okS && okE && okT;
+  };
+
+  // Analyzed: requires a valid category; null categories hidden
+  const analyzedList = PAPERS.filter(p => {
+    const a = ANAL_MAP[p.id];
+    return !!a && !!a.category;
+  }).filter(p => baseFilter(p, true));
+  const selectedUn = SELECTED_CATS.has('Unanalyzed');
+  const anyOtherCatSelected = ([...SELECTED_CATS].some(c=>c !== 'Unanalyzed'));
+  const unAnalyzedList = PAPERS.filter(p => !ANAL_MAP[p.id]).filter(p => {
+    // Hide unanalyzed if other categories are selected
+    if (anyOtherCatSelected && !selectedUn) return false;
+    // Unanalyzed: filter by title/author and date only
+    const textParts = [p.title, ...(p.authors||[])];
+    const blob = textParts.filter(Boolean).join(' ') || '';
+    const okQ = !q || blob.toLowerCase().includes(q);
+    const d = getDate(p.published_date);
+    const okS = !sd || (d && d >= new Date(sd + 'T00:00:00Z'));
+    const okE = !ed || (d && d <= new Date(ed + 'T23:59:59Z'));
+    return okQ && okS && okE;
+  });
+
+  const sortByDate = (A,B) => {
+    const a = getDate(A.published_date)?.getTime() || 0;
+    const b = getDate(B.published_date)?.getTime() || 0;
+    return sort === 'asc' ? (a - b) : (b - a);
+  };
+  
+  // Relevance calculation function (changed to inclusive weighted scoring)
+  const sortByRelevance = (A, B) => {
+    const keyA = String(A.id);
+    const keyB = String(B.id);
+    let scoreA = RELEVANCE_CACHE.get(keyA);
+    let scoreB = RELEVANCE_CACHE.get(keyB);
+    if (scoreA == null) { scoreA = calculateRelevance(A, q); RELEVANCE_CACHE.set(keyA, scoreA); }
+    if (scoreB == null) { scoreB = calculateRelevance(B, q); RELEVANCE_CACHE.set(keyB, scoreB); }
+    return scoreB - scoreA; // Sort in descending order, higher relevance first
+  };
+  // Composite sort function
+  const sortByComposite = (A, B) => {
+    const keyA = String(A.id);
+    const keyB = String(B.id);
+    let scoreA = COMPOSITE_CACHE.get(keyA);
+    let scoreB = COMPOSITE_CACHE.get(keyB);
+    if (scoreA == null) { scoreA = calculateCompositeScore(A, q); COMPOSITE_CACHE.set(keyA, scoreA); }
+    if (scoreB == null) { scoreB = calculateCompositeScore(B, q); COMPOSITE_CACHE.set(keyB, scoreB); }
+    return scoreB - scoreA;
+  };
+  
+  // Choose sorter based on current selection
+  const sortFunction = (sort === 'relevance') ? sortByRelevance : (sort === 'composite' ? sortByComposite : sortByDate);
+  
+  analyzedList.sort(sortFunction);
+  unAnalyzedList.sort(sortFunction);
+
+  // CURRENT_LIST holds analyzed only for detail view; when Unanalyzed selected, no detail list
+  CURRENT_LIST = selectedUn ? [] : analyzedList;
+  CURRENT_INDEX = -1;
+  // Build id -> index cache to avoid O(N^2)
+  IDX_BY_ID = new Map();
+  CURRENT_LIST.forEach((p, i) => { IDX_BY_ID.set(String(p.id), i); });
+  showList(unAnalyzedList, selectedUn);
+}
+
+function showList(unAnalyzed = [], onlyUn = false){
+  const listEl = document.getElementById('listView');
+  const detailEl = document.getElementById('detailView');
+  // Note: re-read query and sort from DOM to avoid undefined
+  const q = (document.getElementById('q').value || '').toLowerCase().trim();
+  // Read current sort choice
+  const activeSortBtn = document.querySelector('.sort-btn.active');
+  const sort = activeSortBtn ? activeSortBtn.getAttribute('data-sort') : 'composite';
+  // Explicitly override CSS #detailView { display: none; }
+  detailEl.style.display = 'none';
+  listEl.style.display = 'block';
+  if (!CURRENT_LIST.length && !unAnalyzed.length) { 
+    listEl.innerHTML = '<div class="loading">No matching papers found</div>'; 
+    return; 
+  }
+  
+  // Rebuild CURRENT_LIST to match render order
+  const newCurrentList = [];
+  const newIndexMap = new Map(); // New index mapping
+
+
+  const selectionActive = (SELECTED_CATS.size > 0);
+  // If Unanalyzed selected, show only unanalyzed entries
+  if (onlyUn) {
+    let html = '<div class="cat-section"><div class="cat-title">Unanalyzed</div><ul class="title-list">';
+    unAnalyzed.forEach((p)=>{
+      const date = fmtDate(p.published_date);
+      const href = p.url ? ` href="${safe(p.url)}" target="_blank" rel="noopener"` : ' href="#"';
+      html += `<li class="title-item"><a class="title-link ext-link"${href}>${safe(p.title)}</a><div class="title-meta">${(p.authors||[]).join(', ') || 'Unknown'} · ${date || ''}</div></li>`;
+    });
+    html += '</ul></div>';
+    listEl.innerHTML = html;
+    return;
+  }
+  let topIndexHtml = '';
+  if (selectionActive) {
+    topIndexHtml += '<div class="title-index">';
+    topIndexHtml += '<h4>Filtered Titles</h4><ol>';
+    // Note: Indexes will be recalculated later, so don't add indexes here
+    // We will update these link indexes after rendering is complete
+    topIndexHtml += '</ol></div>';
+  }
+
+  // Analyzed section
+  let html = topIndexHtml;
+  if (CURRENT_LIST.length) {
+    if (!SELECTED_CATS.size) {
+      const groups = new Map();
+      CURRENT_LIST.forEach(p=>{
+        const a = ANAL_MAP[p.id] || {};
+        const key = a.category || 'Uncategorized';
+        if (!groups.has(key)) groups.set(key, []);
+        groups.get(key).push(p);
+      });
+      Array.from(groups.keys()).sort().forEach(cat=>{
+        html += `<div class="cat-section"><div class="cat-title">${safe(cat)}</div><ul class="title-list">`;
+        groups.get(cat).forEach((p)=>{
+          // 将文章按页面显示顺序添加到新列表中
+          newCurrentList.push(p);
+          const i = newCurrentList.length - 1; // 使用新列表的索引
+          const date = fmtDate(p.published_date);
+          const compositeScore = sort === 'composite' ? calculateCompositeScore(p, (document.getElementById('q').value||'').toLowerCase().trim()) : null;
+          const scoreDisplay = (compositeScore != null ? `<span class="tag" style="background:#f8fafc;color:#475569;border:1px solid #e2e8f0;">Composite: ${compositeScore.toFixed(3)}</span>` : '');
+          // 显示引用数量（从 semantic_ 字段获取）
+          const citationCount = (p.semantic_ && p.semantic_.citation_count != null) ? p.semantic_.citation_count : null;
+          const citationDisplay = citationCount ? `<span class="tag" style="background:#f0f9ff;color:#0369a1;border:1px solid #bae6fd;">📖 ${citationCount}</span>` : '';
+          const a = ANAL_MAP[p.id] || {};
+          const catBadge = a.category ? `<span class="badge badge-cat">${safe(String(a.category).trim())}</span>` : '';
+          const tagBadges = Array.isArray(a.labels) ? a.labels.map(t=>{ const tt = String(t).trim(); if (METHODS_TAGS.includes(tt)) return `<span class=\"badge badge-method\">${safe(tt)}</span>`; if (APP_DOMAIN_TAGS.includes(tt)) return `<span class=\"badge badge-app\">${safe(tt)}</span>`; return ''; }).filter(Boolean).join(' ') : '';
+          html += `<li class="title-item"><a class="title-link" href="#" data-idx="${i}" onclick="return __sd(this)">${safe(p.title)}</a><div class="title-meta">${catBadge}${tagBadges}${(p.authors||[]).join(', ') || 'Unknown'} · ${date || ''} ${scoreDisplay} ${citationDisplay}</div></li>`;
+        });
+        html += `</ul></div>`;
+      });
+    } else {
+      html += '<div style="padding:10px 18px">';
+      CURRENT_LIST.forEach((p,i)=>{
+        // 将文章按页面显示顺序添加到新列表中
+        newCurrentList.push(p);
+        const newIndex = newCurrentList.length - 1; // 使用新列表的索引
+        const a = ANAL_MAP[p.id] || {};
+        const cat = (a.category && String(a.category).trim()) || 'Uncategorized';
+        const date = fmtDate(p.published_date);
+        const relevanceScore = null; // do not display BM25 score
+        const compositeScore = sort === 'composite' ? calculateCompositeScore(p, q) : null;
+        const scoreDisplay = (compositeScore != null ? `<span class="tag" style="background:#f8fafc;color:#475569;border:1px solid #e2e8f0;">Composite: ${compositeScore.toFixed(3)}</span>` : '');
+        // 显示引用数量（从 semantic_ 字段获取）
+        const citationCount = (p.semantic_ && p.semantic_.citation_count != null) ? p.semantic_.citation_count : null;
+        const citationDisplay = citationCount ? `<span class="tag" style="background:#f0f9ff;color:#0369a1;border:1px solid #bae6fd;">📖 ${citationCount}</span>` : '';
+        const tagBadges = Array.isArray(a.labels) ? a.labels.map(t=>{ const tt = String(t).trim(); if (METHODS_TAGS.includes(tt)) return `<span class=\"badge badge-method\">${safe(tt)}</span>`; if (APP_DOMAIN_TAGS.includes(tt)) return `<span class=\"badge badge-app\">${safe(tt)}</span>`; return ''; }).filter(Boolean).join(' ') : '';
+        html += `<div class="title-item"><a class="title-link" href="#" data-idx="${newIndex}" onclick="return __sd(this)">${safe(p.title)}</a><div class="title-meta"><span class="badge badge-cat">${safe(cat)}</span> ${tagBadges} · ${(p.authors||[]).join(', ') || 'Unknown'} · ${date || ''} ${scoreDisplay} ${citationDisplay}</div></div>`;
+      });
+      html += '</div>';
+    }
+  }
+
+  // Unanalyzed section (only when no category filter is selected)
+  if (!SELECTED_CATS.size && unAnalyzed.length) {
+    html += `<div class="cat-section"><div class="cat-title">Unanalyzed</div><ul class="title-list">`;
+    unAnalyzed.forEach((p)=>{
+      const date = fmtDate(p.published_date);
+      const href = p.url ? ` href="${safe(p.url)}" target="_blank" rel="noopener"` : ' href="#"';
+      html += `<li class="title-item"><a class="title-link ext-link"${href}>${safe(p.title)}</a><div class="title-meta">${(p.authors||[]).join(', ') || 'Unknown'} · ${date || ''}</div></li>`;
+    });
+    html += `</ul></div>`;
+  }
+
+  listEl.innerHTML = html;
+  
+  // Update CURRENT_LIST to match render order so navigation works
+  if (newCurrentList.length > 0) {
+    CURRENT_LIST = newCurrentList;
+    // Rebuild id -> index cache
+    IDX_BY_ID = new Map();
+    CURRENT_LIST.forEach((p, i) => { IDX_BY_ID.set(String(p.id), i); });
+    
+    // Update top index links to align with new CURRENT_LIST
+    if (selectionActive) {
+      const topIndexOl = listEl.querySelector('.title-index ol');
+      if (topIndexOl) {
+        topIndexOl.innerHTML = '';
+        CURRENT_LIST.forEach((p, i) => {
+          const li = document.createElement('li');
+          const a = document.createElement('a');
+          a.href = '#';
+          a.className = 'idx-link';
+          a.setAttribute('data-idx', i);
+          a.textContent = p.title;
+          li.appendChild(a);
+          topIndexOl.appendChild(li);
+        });
+      }
+    }
+  }
+}
+
+function showDetail(index){
+  if (index < 0 || index >= CURRENT_LIST.length) return;
+  CURRENT_INDEX = index;
+  const p = CURRENT_LIST[index];
+  const a = ANAL_MAP[p.id] || {};
+  const detailEl = document.getElementById('detailView');
+  const listEl = document.getElementById('listView');
+  listEl.style.display = 'none';
+  detailEl.style.display = 'block';
+  // Show mini TOC on the right
+  renderMiniToc();
+  const tbtn = document.getElementById('miniTocToggle');
+  if (tbtn) { tbtn.style.display = 'none'; tbtn.onclick = showMiniToc; }
+  // Enable gestures
+  enableDetailGestures();
+  const headerEl = document.getElementById('papersHeader');
+  if (headerEl) headerEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  const cat = (a.category && String(a.category).trim()) || (p.categories && p.categories[0]) || 'Uncategorized';
+  const date = fmtDate(p.published_date);
+  const adv = Array.isArray(a.advantages) ? a.advantages : [];
+  const dis = Array.isArray(a.disadvantages) ? a.disadvantages : [];
+  const labels = Array.isArray(a.labels) ? a.labels : [];
+  const labelsBadges = labels.map(t=>{ const tt = String(t).trim(); if (METHODS_TAGS.includes(tt)) return `<span class=\"badge badge-method\">${safe(tt)}</span>`; if (APP_DOMAIN_TAGS.includes(tt)) return `<span class=\"badge badge-app\">${safe(tt)}</span>`; return ''; }).filter(Boolean).join(' ');
+      // 显示引用数量（从 semantic_ 字段获取）
+    const citationCount = (p.semantic_ && p.semantic_.citation_count != null) ? p.semantic_.citation_count : null;
+    const citationDisplay = citationCount ? `<span class="badge" style="background:#f0f9ff;color:#0369a1;border:1px solid #bae6fd;">📖 ${citationCount}</span>` : '';
+    const body = `
+      <h2>${safe(p.title)}</h2>
+      <div class="meta">${(p.authors||[]).join(', ') || 'Unknown'} · <span class="badge badge-cat">${safe(cat)}</span> ${labelsBadges} · ${date || ''} ${citationDisplay} · <a href="${safe(p.url)}" target="_blank">Original Link ↗</a></div>
+    <div class="section">
+      ${a.summary ? `<p><strong>Summary:</strong> ${safe(a.summary)}</p>` : ''}
+      ${Array.isArray(a.key_insights) && a.key_insights.length ? `<p><strong>Key Insights:</strong></p><ul>${a.key_insights.map(x=>`<li>${safe(x)}</li>`).join('')}</ul>` : ''}
+      ${Array.isArray(a.pros) && a.pros.length ? `<p><strong>Pros:</strong></p><ul>${a.pros.map(x=>`<li>${safe(x)}</li>`).join('')}</ul>` : ''}
+      ${Array.isArray(a.cons) && a.cons.length ? `<p><strong>Cons:</strong></p><ul>${a.cons.map(x=>`<li>${safe(x)}</li>`).join('')}</ul>` : ''}
+    </div>`;
+  document.getElementById('detailBody').innerHTML = body;
+  updateNavButtons();
+}
+
+function updateNavButtons(){
+  const atStart = CURRENT_INDEX <= 0;
+  const atEnd = CURRENT_INDEX >= CURRENT_LIST.length - 1;
+  ['prevBtn','prevBtnBottom'].forEach(id=>{ const b = document.getElementById(id); b.disabled = atStart; b.style.opacity = atStart?0.5:1; });
+  ['nextBtn','nextBtnBottom'].forEach(id=>{ const b = document.getElementById(id); b.disabled = atEnd; b.style.opacity = atEnd?0.5:1; });
+  // Sync active link in mini TOC
+  highlightMiniTocActive();
+}
+
+function backToList(){
+  showList();
+  document.getElementById('listView').style.display = 'block';
+  document.getElementById('detailView').style.display = 'none';
+  const mt = document.getElementById('miniToc');
+  if (mt) { mt.style.display = 'none'; mt.innerHTML = ''; }
+  const tbtn = document.getElementById('miniTocToggle');
+  if (tbtn) { tbtn.style.display = 'none'; }
+  // Disable gestures
+  disableDetailGestures();
+}
+
+function stepDetail(delta){ const i = CURRENT_INDEX + delta; if (i>=0 && i<CURRENT_LIST.length) showDetail(i); }
+
+function getDate(iso) { try { return iso ? new Date(iso) : null; } catch { return null; } }
+function fmtDate(iso) { const d = getDate(iso); if (!d) return ''; const y = d.getUTCFullYear(); const m = String(d.getUTCMonth()+1).padStart(2,'0'); const da = String(d.getUTCDate()).padStart(2,'0'); return `${y}-${m}-${da}`; }
+function safe(s) { if (s == null) return ''; return String(s).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;'); }
+function debounce(fn, ms){ let t; return (...a)=>{ clearTimeout(t); t=setTimeout(()=>fn.apply(null,a), ms); } }
+
+// Render right mini TOC
+function renderMiniToc(){
+  const mt = document.getElementById('miniToc');
+  if (!mt) return;
+  if (!CURRENT_LIST.length) { mt.style.display = 'none'; mt.innerHTML = ''; return; }
+
+  // Only in detail view
+  mt.style.display = 'block';
+
+  // Build entries for all currently filtered analyzed papers
+  let html = '<div class="mini-toc-hide-tab" onclick="hideMiniToc()" title="Hide TOC"><span class="arrow">❯</span></div><div class="mini-toc-head"><div class="mini-toc-title">Mini TOC (click to jump)</div></div><div class="mini-toc-scroll"><ul class="mini-toc-list">';
+  CURRENT_LIST.forEach((p, i) => {
+    const active = i === CURRENT_INDEX ? ' active' : '';
+    html += `<li class="mini-toc-item"><a href="#" class="mini-toc-link${active}" data-idx="${i}" onclick="return __sd(this)">${safe(p.title)}</a></li>`;
+  });
+  html += '</ul></div>';
+  mt.innerHTML = html;
+  const tbtn = document.getElementById('miniTocToggle');
+  if (tbtn) { tbtn.style.display = 'none'; tbtn.textContent = '❮ TOC'; tbtn.setAttribute('aria-label','Show TOC'); }
+}
+
+function highlightMiniTocActive(){
+  const mt = document.getElementById('miniToc');
+  if (!mt) return;
+  mt.querySelectorAll('.mini-toc-link').forEach((a, i) => {
+    if (i === CURRENT_INDEX) a.classList.add('active'); else a.classList.remove('active');
+  });
+}
+
+function hideMiniToc(){
+  const mt = document.getElementById('miniToc');
+  const tbtn = document.getElementById('miniTocToggle');
+  if (mt) mt.style.display = 'none';
+  if (tbtn) { tbtn.style.display = 'block'; tbtn.textContent = '❮ TOC'; tbtn.setAttribute('aria-label','Show TOC'); }
+}
+
+function showMiniToc(){
+  renderMiniToc();
+  const tbtn = document.getElementById('miniTocToggle');
+  if (tbtn) { tbtn.style.display = 'none'; tbtn.textContent = '❮ TOC'; tbtn.setAttribute('aria-label','Show TOC'); }
+}
+
+// ========== Gesture support: touch swipe and trackpad horizontal scroll ==========
+function enableDetailGestures(){
+  if (GESTURE_BOUND) return;
+  const el = document.getElementById('detailView');
+  if (!el) return;
+
+  // Touch events
+  el.addEventListener('touchstart', onTouchStart, { passive: true });
+  el.addEventListener('touchmove', onTouchMove, { passive: true });
+  el.addEventListener('touchend', onTouchEnd, { passive: false });
+
+  // Pointer events (mouse drag as fallback)
+  el.addEventListener('pointerdown', onPointerDown);
+  el.addEventListener('pointerup', onPointerUp);
+
+  // Trackpad horizontal scrolling (wheel)
+  el.addEventListener('wheel', onWheel, { passive: false });
+
+  GESTURE_BOUND = true;
+}
+
+function disableDetailGestures(){
+  if (!GESTURE_BOUND) return;
+  const el = document.getElementById('detailView');
+  if (!el) return;
+  el.removeEventListener('touchstart', onTouchStart);
+  el.removeEventListener('touchmove', onTouchMove);
+  el.removeEventListener('touchend', onTouchEnd);
+  el.removeEventListener('pointerdown', onPointerDown);
+  el.removeEventListener('pointerup', onPointerUp);
+  el.removeEventListener('wheel', onWheel);
+  GESTURE_BOUND = false;
+}
+
+function onTouchStart(e){
+  if (!e.touches || e.touches.length !== 1) return;
+  const t = e.touches[0];
+  SWIPE_START_X = t.clientX;
+  SWIPE_START_Y = t.clientY;
+  SWIPE_START_T = Date.now();
+}
+
+function onTouchMove(_e){ /* 保持被动，避免阻塞滚动 */ }
+
+function onTouchEnd(e){
+  const dt = Date.now() - SWIPE_START_T;
+  if (dt > 600) return; // 时间太长不视为快捷滑动
+  const t = e.changedTouches && e.changedTouches[0];
+  if (!t) return;
+  const dx = t.clientX - SWIPE_START_X;
+  const dy = t.clientY - SWIPE_START_Y;
+  if (Math.abs(dx) < 60) return;
+  if (Math.abs(dx) <= Math.abs(dy)) return; // Vertical priority, no trigger
+  e.preventDefault();
+  // Only handle left swipe (next), no right swipe to avoid triggering browser back gesture
+  if (dx < 0) triggerSwipe(-1);
+}
+
+let POINTER_DOWN = false;
+let POINTER_X = 0;
+let POINTER_Y = 0;
+let POINTER_T = 0;
+function onPointerDown(e){
+  POINTER_DOWN = true;
+  POINTER_X = e.clientX;
+  POINTER_Y = e.clientY;
+  POINTER_T = Date.now();
+}
+function onPointerUp(e){
+  if (!POINTER_DOWN) return;
+  POINTER_DOWN = false;
+  const dt = Date.now() - POINTER_T;
+  if (dt > 400) return;
+  const dx = e.clientX - POINTER_X;
+  const dy = e.clientY - POINTER_Y;
+  if (Math.abs(dx) < 80) return;
+  if (Math.abs(dx) <= Math.abs(dy)) return;
+  if (dx < 0) triggerSwipe(-1);
+}
+
+function onWheel(e){
+  // Only in detail view; strong horizontal scroll triggers next; rate-limited
+  const now = Date.now();
+  if (now - SWIPE_LOCK_TS < 500) return; // Throttling
+  const ax = Math.abs(e.deltaX);
+  const ay = Math.abs(e.deltaY);
+  // Allow mild horizontal movement
+  if (ax > 20 && ay < 30) {
+    e.preventDefault();
+    SWIPE_LOCK_TS = now;
+    // Only handle left swipe (deltaX>0)
+    if (e.deltaX > 0) triggerSwipe(-1);
+  }
+}
+
+function triggerSwipe(_dx){
+  // Only implement left swipe as next
+  stepDetail(1);
+}
+    </script>
+</body>
+</html>

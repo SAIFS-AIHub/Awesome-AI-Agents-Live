@@ -1,107 +1,3 @@
-# Python
-__pycache__/
-*.py[cod]
-*$py.class
-*.so
-.Python
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
-*.egg-info/
-.installed.cfg
-*.egg
-MANIFEST
-
-# PyInstaller
-*.manifest
-*.spec
-
-# Installer logs
-pip-log.txt
-pip-delete-this-directory.txt
-
-# Unit test / coverage reports
-htmlcov/
-.tox/
-.coverage
-.coverage.*
-.cache
-nosetests.xml
-coverage.xml
-*.cover
-.hypothesis/
-.pytest_cache/
-
-# Translations
-*.mo
-*.pot
-
-# Django stuff:
-*.log
-local_settings.py
-db.sqlite3
-
-# Flask stuff:
-instance/
-.webassets-cache
-
-# Scrapy stuff:
-.scrapy
-
-# Sphinx documentation
-docs/_build/
-
-# PyBuilder
-target/
-
-# Jupyter Notebook
-.ipynb_checkpoints
-
-# pyenv
-.python-version
-
-# celery beat schedule file
-celerybeat-schedule
-
-# SageMath parsed files
-*.sage.py
-
-# Environments
-.env
-.venv
-env/
-venv/
-ENV/
-env.bak/
-venv.bak/
-
-# Spyder project settings
-.spyderproject
-.spyproject
-
-# Rope project settings
-.ropeproject
-
-# mkdocs documentation
-/site
-
-# mypy
-.mypy_cache/
-.dmypy.json
-dmypy.json
-
-# Pyre type checker
-.pyre/
-
 # macOS
 .DS_Store
 .AppleDouble
@@ -161,34 +57,17 @@ $RECYCLE.BIN/
 *.swo
 *~
 
-# Project specific exclusions
-docs/
-logs/
-data/
-data/*.json
-data/*.json.lock
-clash/
-tests/
-test_*.py
-
 # Backup files
 *.backup
 *.backup*
 *.backup_*
 
-# Environment and config files
-*.json
-gemini-token-hyp-e944d69c18ad.json
+# Node.js (if you add any build tools later)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
 
-# Individual test scripts
-backfill_authors.py
-backfill_word_count.py
-clean_papers_by_keywords.py
-cleanup_stream_callback.py
-fix_paper_dates.py
-fix_papers_save.py
-remove_duplicate_titles.py
-run_with_crontab.sh
-install_crontab.sh
-example_crontab
-crontab_setup.md 
+# Temporary files
+*.tmp
+*.temp
