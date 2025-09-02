@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en-US">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="Content-Language" content="en">
+    <meta http-equiv="Content-Language" content="en-US">
     <title>Agent Survey — Analyzed Papers Catalog</title>
     <style>
         * { box-sizing: border-box; }
@@ -188,8 +188,8 @@
         <div class="bar card">
             <div class="row">
                 <input id="q" class="search-input" placeholder="Search: title / author / keywords..." />
-                <input id="start" type="date" />
-                <input id="end" type="date" />
+                <input id="start" type="date" lang="en-US" />
+                <input id="end" type="date" lang="en-US" />
                 <div class="sort-buttons">
                     <button id="sort-composite" class="sort-btn" data-sort="composite" style="display: none;">Composite</button>
                     <button id="sort-relevance" class="sort-btn active" data-sort="relevance">Relevance</button>
@@ -592,13 +592,17 @@ function countPapersWithTerm(term) {
 }
 
         window.addEventListener('load', async () => {
-            // Force English locale for date inputs
+            // Force English locale for date inputs - multiple approaches
             document.querySelectorAll('input[type="date"]').forEach(input => {
                 input.setAttribute('lang', 'en-US');
+                input.setAttribute('locale', 'en-US');
+                // Set the document locale to English
+                document.documentElement.setAttribute('lang', 'en-US');
             });
             
             // Restore saved theme
             const savedTheme = localStorage.getItem('selected-theme') || 'beige';
+            switchTheme(savedTheme);
             switchTheme(savedTheme);
             
             // Sync active state on theme circles
