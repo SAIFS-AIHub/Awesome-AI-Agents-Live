@@ -18596,5 +18596,235 @@
     ],
     "score": 7,
     "created_at": "2025-09-02T20:04:52.641560"
+  },
+  {
+    "paper_id": "arxiv_2508.06767v1",
+    "category": "Agent Collaboration",
+    "labels": [
+      "non-fine-tune",
+      "Industrial Automation",
+      "Robotics & Embodied AI",
+      "CS & SE"
+    ],
+    "summary": "This paper introduces PANAMA, a novel network-aware Multi-Agent Reinforcement Learning (MARL) framework for solving the Multi-Agent Path Finding (MAPF) problem within a Digital Twin (DT) ecosystem. The core problem is to enable cooperative pathfinding for multiple robots (agents) while considering realistic wireless communication constraints, a challenge in environments like automated warehouses. The proposed solution, PANAMA, uses a Centralized Training with Decentralized Execution (CTDE) paradigm. Its key innovations include an asymmetric observation space and a dynamic priority system based on A* distance to the goal, which forces agents to yield to higher-priority agents, effectively breaking symmetry and preventing deadlocks. Furthermore, the framework integrates a model of the network (D-Net) by including a normalized SINR map in each agent's observation and adding a penalty to the reward function for traversing areas with poor signal quality. Experiments show that PANAMA not only learns cooperative strategies efficiently but also scales effectively, outperforming the LaCAM* benchmark in scenarios with up to 256 agents. The network-aware version successfully demonstrates a trade-off, accepting longer paths (increased makespan) to maintain superior communication quality and avoid connection blackouts.",
+    "key_insights": [
+      "Digital Twin ecosystems can serve as a 'buffer zone' for data exchange between network providers and application providers, mitigating privacy and regulatory issues.",
+      "Asymmetric observations in MARL, where agents only perceive the planned paths of higher-priority agents, effectively break symmetry and facilitate cooperation in shared-policy settings.",
+      "A dynamic priority scheme based on the A* distance to an agent's goal effectively resolves conflicts and prevents 'goal camping' by demoting agents that have reached their destination.",
+      "Integrating network quality (SINR) directly into the agent's observation space and reward function enables the MARL policy to learn a trade-off between path efficiency (makespan) and communication reliability.",
+      "The proposed CTDE framework, combining DDQN, Prioritized Experience Replay, and curriculum learning, demonstrates high scalability, outperforming a classical search-based MAPF solver (LaCAM*) in high-agent-density scenarios.",
+      "Forcing the model to learn from intentionally created deadlock scenarios during training is crucial for developing robust conflict resolution policies."
+    ],
+    "pros": [
+      "The novel combination of network awareness with MARL for the MAPF problem addresses a practical challenge in embodied AI and robotics.",
+      "The asymmetric observation and dynamic priority mechanism is an effective and elegant solution to the common deadlock problem in multi-agent systems with shared policies.",
+      "Demonstrates strong scalability and superior performance compared to a relevant state-of-the-art benchmark (LaCAM*) in scenarios with a high number of agents.",
+      "The framework is well-motivated by real-world applications in 6G-enabled Digital Twin ecosystems.",
+      "The reward function is meticulously engineered with multiple components (goal achievement, penalties, potential-based shaping, network quality) to guide agents toward complex cooperative behavior."
+    ],
+    "cons": [
+      "The network model (D-Net) is a simplified physical layer model and does not account for more complex dynamics like traffic load, handover latency, or MAC layer contention.",
+      "The current framework is designed for homogeneous agents; support for heterogeneous agents with different capabilities is listed as future work.",
+      "The trade-off between makespan and network quality is demonstrated, but the framework lacks a mechanism to allow a user to dynamically control this trade-off based on task priority.",
+      "The training time of 11 hours, while for a full curriculum, could be a practical limitation for even more complex or larger-scale problems."
+    ],
+    "score": 7,
+    "created_at": "2025-09-02T20:05:33.382928"
+  },
+  {
+    "paper_id": "arxiv_2508.06457v1",
+    "category": "Security",
+    "labels": [
+      "non-fine-tune",
+      "Psychology",
+      "Social Simulation"
+    ],
+    "summary": "The paper addresses the emerging threat of large language models (LLMs) being used to automate sophisticated scam calls. It argues that existing safety mechanisms, designed to block single, explicit malicious prompts, are insufficient against more complex attacks. The author introduces ScamAgent, a modular, autonomous agent framework that simulates human-level scam calls by integrating LLMs with goal-driven planning, contextual memory, and text-to-speech (TTS) synthesis. ScamAgent evades safety guardrails by decomposing a malicious objective (e.g., obtaining personal information) into a sequence of seemingly benign sub-goals and using role-play framing. Through systematic experiments across various scam scenarios and LLMs (GPT-4, Claude 3.7, LLaMA3-70B), the study demonstrates that ScamAgent can generate highly plausible and persuasive dialogues that successfully circumvent current defenses. The findings highlight a critical vulnerability in agentic AI and call for a shift towards multi-turn, intent-aware moderation strategies to mitigate the risks of automated social engineering.",
+    "key_insights": [
+      "Autonomous agents can weaponize LLMs for social engineering by decomposing a malicious goal into a sequence of seemingly benign sub-goals, bypassing single-turn safety filters.",
+      "Current LLM safety guardrails are largely ineffective against multi-turn, agentic attacks that use contextual memory and role-playing to obscure harmful intent over an entire conversation.",
+      "The ScamAgent framework demonstrates a complete pipeline for automated scam generation, integrating planning, memory, deception-aware prompting, and real-time text-to-speech (TTS) synthesis.",
+      "Human evaluators found the dialogues generated by ScamAgent to be highly plausible and persuasive, scoring them nearly as high as transcripts from real-world scam calls.",
+      "In evasion tests, the multi-turn agentic approach significantly reduced model refusal rates compared to single-prompt attacks across major LLMs like GPT-4, Claude 3.7, and LLaMA3-70B.",
+      "Effective defense against such threats requires a move from static, prompt-level moderation to dynamic, multi-layered strategies including multi-turn context tracking, persona restrictions, and memory control."
+    ],
+    "pros": [
+      "Presents a novel and highly relevant threat model for agentic AI misuse that goes beyond simple prompt injection.",
+      "Provides a concrete architectural framework (ScamAgent) for simulating complex, multi-turn social engineering attacks.",
+      "Conducts a systematic empirical evaluation across multiple state-of-the-art LLMs, scam scenarios, and simulated user personas.",
+      "Includes a human evaluation study to validate the real-world plausibility and persuasiveness of the generated scam dialogues.",
+      "Proposes a clear set of multi-layered mitigation strategies to address the identified vulnerabilities."
+    ],
+    "cons": [
+      "The evaluation relies on simulated, rule-based user personas, which may not fully capture the unpredictability of real human behavior in a scam scenario.",
+      "Experiments were conducted in a text-only setting, and the full persuasive impact of the integrated TTS audio component was not empirically tested.",
+      "The study is limited to three publicly accessible LLMs and may not generalize to proprietary models with more advanced or undisclosed safety features.",
+      "The proposed mitigation strategies are theoretical and were not implemented or tested for their effectiveness."
+    ],
+    "score": 7,
+    "created_at": "2025-09-02T20:06:08.860518"
+  },
+  {
+    "paper_id": "arxiv_2508.06433v2",
+    "category": "Memory Mechanism",
+    "labels": [
+      "non-fine-tune",
+      "Robotics & Embodied AI",
+      "Research Assistant"
+    ],
+    "summary": "This paper addresses the inefficiency of LLM-based agents in long-horizon tasks, where they often restart from scratch after failures and fail to learn from past experiences. The authors introduce Memp, a task-agnostic framework that treats procedural memory as a first-class optimization object. Memp systematically investigates the entire lifecycle of procedural memory, including its construction (e.g., storing raw trajectories vs. abstract scripts), retrieval (e.g., query-based semantic search), and updating (e.g., validation filtering, reflection-based adjustment). By evaluating on the ALFWorld and TravelPlanner benchmarks with powerful models like GPT-4o and Claude, the research demonstrates that agents equipped with Memp significantly improve task success rates and efficiency, reducing steps and token consumption. The framework enables continual learning, where agent performance improves with experience, and shows that procedural knowledge can be effectively transferred from a strong model to a weaker one, boosting its capabilities.",
+    "key_insights": [
+      "A systematic approach to managing the procedural memory lifecycle—construction, retrieval, and updating—is crucial for agent performance on complex, long-horizon tasks.",
+      "Dynamic, online memory update mechanisms, particularly those involving reflection and error correction, enable agents to achieve continual, near-linear improvement as they complete more tasks.",
+      "Procedural memory is transferable across models; knowledge distilled by a powerful model (e.g., GPT-4o) can be used as a memory bank to significantly improve the performance of a less capable model.",
+      "The optimal format for procedural memory combines concrete examples (full trajectories) with high-level abstractions (scripts) to balance specificity and generalizability.",
+      "The method of retrieving memories is critical, with semantic query-based retrieval significantly outperforming random sampling.",
+      "While more retrieved memories generally improve performance, there is a point of diminishing returns where excessive or irrelevant memories can introduce noise and degrade performance."
+    ],
+    "pros": [
+      "Provides a systematic and comprehensive framework for procedural memory, exploring the distinct phases of construction, retrieval, and update, which have been relatively underexplored.",
+      "Demonstrates strong empirical results on two diverse and challenging benchmarks (ALFWorld, TravelPlanner) using state-of-the-art LLMs.",
+      "The finding that procedural memory can be transferred between models of different capabilities is a significant and practical contribution.",
+      "The framework is task-agnostic, suggesting broad applicability to various agent-based systems.",
+      "Includes extensive ablation studies that clearly compare the effectiveness of different strategies within each module of the memory system."
+    ],
+    "cons": [
+      "The study relies on benchmarks with clear, predefined reward signals, which may not be available in many real-world scenarios, a limitation the authors acknowledge.",
+      "The retrieval mechanisms explored are primarily vector-based; other methods like hybrid search (e.g., BM25 + vector) are mentioned as future work but not implemented.",
+      "The complexity and cost of generating, storing, and retrieving memories, especially when using large models like GPT-4o, are not deeply analyzed."
+    ],
+    "score": 7,
+    "created_at": "2025-09-02T20:06:42.299041"
+  },
+  {
+    "paper_id": "arxiv_2508.06269v1",
+    "category": "Agent Collaboration",
+    "labels": [
+      "non-fine-tune",
+      "Robotics & Embodied AI"
+    ],
+    "summary": "This paper addresses the significant computational inefficiency of generative models, like diffusion and flow-based models, when used as policies in Offline Multi-Agent Reinforcement Learning (Offline MARL). The iterative sampling required by these models creates a bottleneck, especially in multi-agent scenarios. The authors propose OM2P (Offline Multi-Agent Mean-Flow Policy), a novel framework that leverages mean-flow models to enable efficient, one-step action generation without requiring policy distillation. OM2P introduces a tailored training objective that combines a behavior-cloning-style mean-flow loss with Q-function guidance to improve upon the dataset's behavior. To further boost efficiency and stability, it employs a derivative-free velocity estimation using finite differences and a generalized timestep sampling scheme. Experiments on MPE and MAMuJoCo benchmarks demonstrate that OM2P achieves near-optimal performance while dramatically reducing GPU memory usage by up to 3.8x and accelerating training time by up to 10.8x compared to existing generative policy methods, proving its effectiveness and scalability.",
+    "key_insights": [
+      "Mean-flow models can be repurposed as highly efficient one-step policy networks in offline MARL, eliminating the slow iterative sampling required by traditional diffusion and flow models.",
+      "A derivative-free velocity estimation using finite differences can effectively replace expensive gradient computations in the mean-flow objective, leading to substantial reductions in memory usage and faster training without performance loss.",
+      "Combining a mean-flow matching loss for behavior cloning with a Q-learning objective is crucial for learning policies that both mimic the data distribution and improve upon it by maximizing expected returns.",
+      "Generalized, non-uniform timestep sampling allows the model to focus on more informative parts of the generation trajectory (e.g., close to t=1), improving stability and learning efficiency for one-step generation.",
+      "The proposed OM2P framework successfully avoids policy distillation, a common but costly step in prior flow-based RL methods, by directly training the one-step generative policy.",
+      "The balance between behavior cloning and Q-learning, controlled by hyperparameter η, is critical and needs to be adapted to the quality of the offline dataset for optimal performance."
+    ],
+    "pros": [
+      "Significantly improves training and inference efficiency, achieving up to a 10.8x speedup and 3.8x reduction in GPU memory compared to diffusion-based baselines.",
+      "Achieves competitive or state-of-the-art performance on standard offline MARL benchmarks (MPE, MAMuJoCo).",
+      "Proposes a novel and effective integration of mean-flow models for policy learning, which is a new direction for offline MARL.",
+      "The training framework is simplified by avoiding the need for policy distillation, which is often required by other flow-based RL methods.",
+      "The derivative-free velocity estimation is a clever technique that enhances stability and scalability in high-dimensional multi-agent settings."
+    ],
+    "cons": [
+      "The performance is sensitive to the hyperparameter η, which balances behavior cloning and Q-learning, requiring careful tuning based on dataset quality.",
+      "Experiments are conducted on environments with a relatively small number of agents (2-3 agents); scalability to scenarios with many more agents is not demonstrated.",
+      "The policy's ability to improve beyond the dataset is dependent on the accuracy of the learned Q-function, which can be prone to errors in the offline setting."
+    ],
+    "score": 8,
+    "created_at": "2025-09-02T20:07:18.468931"
+  },
+  {
+    "paper_id": "arxiv_2508.09197v1",
+    "category": "Agent Collaboration",
+    "labels": [
+      "non-fine-tune",
+      "CS & SE",
+      "Industrial Automation"
+    ],
+    "summary": "This paper introduces MX-AI, a multi-agent platform for the observability and control of 5G Open and AI-native Radio Access Networks (AI-RAN). Addressing the complexity of managing future networks, which surpasses human capabilities and traditional automation, MX-AI implements a graph of cooperating LLM-based agents with specialized roles such as planning, monitoring, and execution. Unlike prior work that was largely simulator-bound or used single agents, MX-AI is integrated into a live 5G testbed featuring OpenAirInterface (OAI) and FlexRIC components. The system processes natural language commands from operators, using a novel push-based RAG mechanism to maintain fresh network context for its agents. The evaluation demonstrates that on a set of control tasks, the system achieves 100% accuracy, and its response latency is competitive with human experts. The research quantifies the trade-offs between different LLM back-ends (local vs. cloud, large vs. small) in terms of performance, latency, and resource usage, establishing a practical path toward intent-driven, autonomous network operations.",
+    "key_insights": [
+      "A multi-agent graph architecture with specialized roles (e.g., planner, monitor, executor) is an effective paradigm for managing the complexity of modern telecommunication networks.",
+      "The system is the first to demonstrate an end-to-end, LLM-driven multi-agent system controlling a live 5G Open RAN testbed, moving beyond simulation.",
+      "The quality of observability and control actions depends more on the engineering of retrieval and tool-use mechanisms (like live context updates via delta-watchers) than on the raw size of the LLM.",
+      "LLM-based agents can achieve 100% accuracy on defined control tasks and match or outperform human experts in time-to-action, significantly reducing cognitive and operational overhead.",
+      "There is a clear, quantifiable trade-off between model coherence, latency, and resource footprint, allowing operators to choose between high-fidelity on-premise models and faster, smaller models for different use cases.",
+      "The introduction of a Human-to-Agent (H2A) interface at the non-real-time layer provides a pragmatic approach to integrating agentic AI into existing network management workflows."
+    ],
+    "pros": [
+      "Presents a first-of-its-kind live demonstration of a multi-agent LLM system controlling a real 5G O-RAN network, a significant step beyond simulation.",
+      "Provides a comprehensive evaluation that benchmarks multiple LLM back-ends (local and cloud) on key metrics including accuracy, latency, answer quality, and resource footprint.",
+      "Features a novel and practical RAG architecture with push-based, delta-aware watchers that keep the agent's context synchronized with the live network state.",
+      "Directly compares agent performance against human experts, providing a compelling empirical justification for the system's effectiveness and speed.",
+      "The architecture is built on open-source components (OAI, FlexRIC) and standard interfaces (R1, E2), which promotes reproducibility and integration."
+    ],
+    "cons": [
+      "The evaluation is based on a limited set of 10 control actions, which may not fully capture the complexity of real-world RAN management.",
+      "The system operates at the non-real-time (Non-RT) layer with latencies in the seconds range, making it unsuitable for time-critical control loops that require sub-second response.",
+      "The paper acknowledges the need for safety guardrails to prevent unsafe RAN commands but does not detail their implementation or evaluation.",
+      "While positioned as a step towards 6G, the system's scalability to the vastly increased data and complexity of future 6G networks remains a projection, not a demonstrated capability."
+    ],
+    "score": 8,
+    "created_at": "2025-09-02T20:08:13.577891"
+  },
+  {
+    "paper_id": "arxiv_2508.06110v1",
+    "category": "Agent Collaboration",
+    "labels": [
+      "non-fine-tune",
+      "Research Assistant",
+      "Documentation and Data Management"
+    ],
+    "summary": "The paper addresses the underperformance of Large Language Models (LLMs) in complex table reasoning tasks compared to supervised methods. To overcome this, it introduces PanelTR, a zero-shot, multi-agent framework that orchestrates LLM capabilities without requiring training data or architectural changes. PanelTR mimics scientific methodology by employing specialized 'scientist' agents that engage in a three-phase process: individual Investigation to analyze the problem, Self-Review to iteratively validate their own findings, and collaborative Peer-Review to discuss and converge on a final answer. Experiments across four diverse table reasoning benchmarks (TAT-QA, SEM-TAB-FACTS, WikiSQL, FEVEROUS) demonstrate that this structured, deliberative approach enables PanelTR to achieve competitive and often superior performance against strong baselines. The results highlight that the methodological framework itself, rather than specific agent personas, is the primary driver of the improved reasoning capabilities, showcasing a promising path for enhancing LLMs through structured collaboration.",
+    "key_insights": [
+      "A multi-agent framework mimicking scientific methodology (investigation, self-review, peer-review) can significantly improve LLM performance on complex table reasoning tasks.",
+      "The proposed PanelTR framework is zero-shot, achieving strong performance without any task-specific training data or fine-tuning.",
+      "The structured collaborative process is the key driver of performance, as experiments with different agent roles yielded similar results, indicating the methodology's robustness.",
+      "Gains in reasoning are achieved by orchestrating existing LLM capabilities through a systematic workflow, rather than by advancing the neural network architecture itself.",
+      "There is a trade-off in collaborative deliberation; excessive iterations in the peer-review stage can degrade performance, especially on simpler verification tasks.",
+      "The framework decomposes the reasoning process into distinct stages (Problem Analysis, Solution Formulation, Verification), providing a more structured and methodical approach than standard CoT prompting.",
+      "PanelTR demonstrates strong performance on complex reasoning but can fall short of supervised methods in simple label accuracy, suggesting it excels where deep inference is needed."
+    ],
+    "pros": [
+      "Introduces a novel and intuitive multi-agent framework inspired by the rigorous process of scientific inquiry.",
+      "Operates in a zero-shot setting, making it highly adaptable and eliminating the need for costly annotated data.",
+      "Demonstrates competitive or superior performance on multiple complex table reasoning benchmarks against both supervised and unsupervised methods.",
+      "Ablation studies effectively validate the contribution of each stage (Investigation, Self-Review, Peer-Review) to the overall performance.",
+      "The framework's success is shown to be independent of specific agent personas, highlighting the robustness of the underlying methodological approach."
+    ],
+    "cons": [
+      "The paper explicitly avoids direct comparison with other multi-agent systems, making it difficult to assess its performance relative to state-of-the-art MAS frameworks.",
+      "The framework's ultimate reasoning capability is limited by the foundational LLM it uses.",
+      "Evaluation relies on rigid metrics (e.g., Exact Match) that may not fully capture the quality of semantically correct but syntactically different answers generated by the agents.",
+      "Performance can degrade with excessive iterations or when complex review stages are applied to simple tasks, indicating a need for dynamic process control.",
+      "The paper acknowledges that common MAS challenges, such as task planning and collaboration instability, are observed and not fully overcome."
+    ],
+    "score": 7,
+    "created_at": "2025-09-02T20:09:01.597917"
+  },
+  {
+    "paper_id": "arxiv_2508.06042v1",
+    "category": "Agent Collaboration",
+    "labels": [
+      "fine-tune",
+      "CS & SE"
+    ],
+    "summary": "This paper addresses the challenge of long-term strategic reasoning for LLM-based agents in complex, dynamic environments like the real-time strategy game StarCraft II (SC2). Existing agents often fail to maintain coherent strategies and manage resources effectively. The authors propose HIMA (Hierarchical Imitation Multi-Agent), a framework inspired by the 'society of mind' principle. HIMA employs multiple specialized agents, fine-tuned on human expert replays, to generate diverse, long-horizon strategic plans. A central meta-controller, the Strategic Planner (SP), synthesizes these proposals using a novel 'temporal Chain-of-Thought' (t-CoT) to align actions with short- and long-term goals. The SP also uses a feedback mechanism to adapt to unexpected events. To facilitate comprehensive evaluation, the paper introduces TextSCII-All, an expanded SC2 environment covering all nine race matchups. Empirical results show that HIMA significantly outperforms state-of-the-art methods in win rates and computational efficiency, demonstrating the effectiveness of combining specialized imitation agents with high-level strategic orchestration.",
+    "key_insights": [
+      "A 'society of mind' architecture, where a meta-controller orchestrates multiple specialized agents, is highly effective for strategic reasoning in complex domains like RTS games.",
+      "Generating structured, long-horizon action sequences instead of single actions per step improves strategic coherence and dramatically reduces computational costs by minimizing LLM queries.",
+      "Specializing imitation agents by clustering human replay data based on strategic personas, such as army unit composition, produces diverse and effective proposals for the meta-controller.",
+      "A 'temporal Chain-of-Thought' (t-CoT) reasoning process, which explicitly connects immediate, short-term, and long-term goals, enhances the quality of strategic planning.",
+      "A feedback system that triggers plan re-evaluation based on critical in-game events is essential for balancing proactive long-term planning with real-time adaptability.",
+      "The introduction of the TextSCII-All environment, covering all nine race matchups in StarCraft II, provides a more comprehensive and robust testbed for benchmarking strategic AI agents."
+    ],
+    "pros": [
+      "The HIMA framework is a novel and effective integration of imitation learning, multi-agent systems, and hierarchical planning.",
+      "Demonstrates state-of-the-art performance with significantly higher win rates against both built-in AI and other agent baselines.",
+      "Achieves remarkable computational efficiency by drastically reducing the frequency of LLM calls, making it more practical for real-time environments.",
+      "Contributes a new, more comprehensive evaluation environment (TextSCII-All) that supports all nine race matchups, benefiting future research.",
+      "Provides thorough ablation studies that validate the contribution of each key component, including the multi-agent design, temporal CoT, and agent specialization method."
+    ],
+    "cons": [
+      "The framework's performance is notably lower for the Terran race, indicating a limitation in handling strategies that require fine-grained micro-management, which is outside the current scope.",
+      "Optimal performance of the Strategic Planner relies on powerful, and potentially expensive, closed-source models like GPT-4o, although open-source models are also shown to be viable.",
+      "The plan re-evaluation mechanism is triggered by a simple heuristic (enemy unit count), which may not be robust across all possible battlefield scenarios.",
+      "Agent specialization is based on pre-defined clusters from offline data, which might limit the system's ability to discover or adapt to entirely novel, emergent strategies during a match."
+    ],
+    "score": 9,
+    "created_at": "2025-09-02T20:09:49.723738"
   }
 ]
