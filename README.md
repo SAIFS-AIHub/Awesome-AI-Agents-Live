@@ -5,7 +5,7 @@
 A lightweight, continuously-updated catalog of research papers on LLM-based autonomous agents. The site aggregates recent work (aiming for daily refresh) and provides a clean reading experience with search, filtering, category navigation, and quick detail views.
 
 ### Preview
-Below are two illustrative screenshots. Replace these placeholders after you capture your images.
+Two representative UI snapshots for quick reference.
 
 ![Browse view](docs/images/browse_view.png)
 
@@ -29,6 +29,7 @@ Researchers, engineers, and students tracking the rapid progress of LLM-based ag
 - This repository focuses on explaining what the catalog is and why it exists. It intentionally avoids code-level details here.
 - The web UI is optimized for readability and quick comparison across many papers.
 - Citation counts displayed in the catalog are sourced via the [Semantic Scholar API](https://www.semanticscholar.org/product/api).
+- Paper summaries are AI-generated (LLM-assisted) and may contain inaccuracies; use discretion and refer to the original papers when needed.
 
 ### License
 This project is licensed under the MIT License. See [LICENSE](LICENSE) for details.
