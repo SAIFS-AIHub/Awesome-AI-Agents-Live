@@ -207,6 +207,9 @@
                     </div>
                 </div>
             </div>
+            <div class="results-count" id="resultsCount" style="margin-top: 12px; font-size: 14px; color: var(--text-secondary); font-family: var(--sans); display: none;">
+                <span id="resultsText">Showing 0 papers</span>
+            </div>
         </div>
         
         <div class="toc">
@@ -855,6 +858,10 @@ function render() {
   // Build id -> index cache to avoid O(N^2)
   IDX_BY_ID = new Map();
   CURRENT_LIST.forEach((p, i) => { IDX_BY_ID.set(String(p.id), i); });
+  
+  // Update results count display
+  updateResultsCount(analyzedList.length, unAnalyzedList.length, selectedUn);
+  
   showList(unAnalyzedList, selectedUn);
 }
 
@@ -1063,6 +1070,41 @@ function formatAuthors(authors) {
   return authors.slice(0, 20).join(', ') + '...';
 }
 function debounce(fn, ms){ let t; return (...a)=>{ clearTimeout(t); t=setTimeout(()=>fn.apply(null,a), ms); } }
+
+function updateResultsCount(analyzedCount, unAnalyzedCount, onlyUnanalyzed) {
+  const resultsCountEl = document.getElementById('resultsCount');
+  const resultsTextEl = document.getElementById('resultsText');
+  
+  if (!resultsCountEl || !resultsTextEl) return;
+  
+  const totalCount = analyzedCount + unAnalyzedCount;
+  
+  // Show count if there are any filters applied or search query
+  const hasQuery = (document.getElementById('q').value || '').trim();
+  const hasDateFilter = document.getElementById('start').value || document.getElementById('end').value;
+  const hasCategoryFilter = SELECTED_CATS.size > 0;
+  const hasTagFilter = SELECTED_TAGS.size > 0;
+  
+  const hasFilters = hasQuery || hasDateFilter || hasCategoryFilter || hasTagFilter;
+  
+  if (hasFilters || onlyUnanalyzed) {
+    resultsCountEl.style.display = 'block';
+    
+    if (onlyUnanalyzed) {
+      resultsTextEl.textContent = `Showing ${unAnalyzedCount} unanalyzed papers`;
+    } else if (analyzedCount > 0 && unAnalyzedCount > 0) {
+      resultsTextEl.textContent = `Showing ${analyzedCount} analyzed + ${unAnalyzedCount} unanalyzed papers (${totalCount} total)`;
+    } else if (analyzedCount > 0) {
+      resultsTextEl.textContent = `Showing ${analyzedCount} analyzed papers`;
+    } else if (unAnalyzedCount > 0) {
+      resultsTextEl.textContent = `Showing ${unAnalyzedCount} unanalyzed papers`;
+    } else {
+      resultsTextEl.textContent = 'No papers found';
+    }
+  } else {
+    resultsCountEl.style.display = 'none';
+  }
+}
 
 // Render right mini TOC
 function renderMiniToc(){
