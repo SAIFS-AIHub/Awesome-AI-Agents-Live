@@ -64,6 +64,13 @@
         /* Input focus state */
         .search-input:focus, input[type=date]:focus { outline: none; border-color: var(--accent-color); box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1); }
         
+        /* Citation filter */
+        .citation-filter { display: flex; align-items: center; gap: 6px; }
+        .citation-label { font-size: 13px; color: var(--text-secondary); font-weight: 500; }
+        .citation-filter input[type=number] { padding: 8px 6px; border: 1px solid var(--border-color); border-radius: 6px; background: var(--bg-input); color: var(--text-primary); font-size: 13px; font-family: var(--sans); transition: all 0.2s ease; }
+        .citation-filter input[type=number]:focus { outline: none; border-color: var(--accent-color); box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1); }
+        .citation-filter input[type=number]::placeholder { color: var(--text-muted); }
+
         /* Sort buttons */
         .sort-buttons { display: flex; gap: 4px; }
         .sort-btn { padding: 8px 12px; border: 1px solid var(--border-color); background: var(--bg-input); color: var(--text-primary); border-radius: 8px; cursor: pointer; font-size: 13px; font-family: var(--sans); transition: all 0.2s; }
@@ -170,7 +177,12 @@
         .mini-toc-toggle { position: fixed; right: 16px; top: 64px; z-index: 51; border: 1px solid var(--border-color); background: var(--bg-card); color: var(--text-primary); border-radius: 999px; padding: 6px 10px; font-size: 12px; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
         .mini-toc-toggle:hover { background: var(--bg-secondary); }
         @media (max-width: 960px) { .mini-toc { display: none !important; } }
-        @media (max-width: 720px) { .row { flex-direction: column; } .reader { padding: 18px; } }
+        @media (max-width: 720px) { 
+          .row { flex-direction: column; } 
+          .reader { padding: 18px; }
+          .citation-filter { margin: 8px 0; }
+          .sort-buttons { flex-wrap: wrap; margin: 8px 0; }
+        }
     </style>
 </head>
 <body>
@@ -191,9 +203,16 @@
                 <input id="q" class="search-input" placeholder="Search: title / author / keywords..." />
                 <input id="start" type="date" lang="en-US" />
                 <input id="end" type="date" lang="en-US" />
+                <div class="citation-filter">
+                    <label class="citation-label">Citations:</label>
+                    <input id="minCitations" type="number" placeholder="Min" min="0" style="width: 70px;" />
+                    <span style="margin: 0 4px;">-</span>
+                    <input id="maxCitations" type="number" placeholder="Max" min="0" style="width: 70px;" />
+                </div>
                 <div class="sort-buttons">
                     <button id="sort-composite" class="sort-btn active" data-sort="composite">Composite</button>
                     <button id="sort-relevance" class="sort-btn" data-sort="relevance">Relevance</button>
+                    <button id="sort-citations" class="sort-btn" data-sort="citations">Citations</button>
                     <button id="sort-desc" class="sort-btn" data-sort="desc">Newest</button>
                     <button id="sort-asc" class="sort-btn" data-sort="asc">Oldest</button>
                 </div>
@@ -684,6 +703,8 @@ function bind() {
   document.getElementById('q').oninput = debounce(render, 200);
   document.getElementById('start').onchange = render;
   document.getElementById('end').onchange = render;
+  document.getElementById('minCitations').oninput = debounce(render, 300);
+  document.getElementById('maxCitations').oninput = debounce(render, 300);
   
   // Sort button event binding
   document.querySelectorAll('.sort-btn').forEach(btn => {
@@ -763,12 +784,14 @@ function render() {
   const q = (document.getElementById('q').value || '').toLowerCase().trim();
   const sd = document.getElementById('start').value;
   const ed = document.getElementById('end').value;
+  const minCit = document.getElementById('minCitations').value;
+  const maxCit = document.getElementById('maxCitations').value;
   // Get current sort selection
   const activeSortBtn = document.querySelector('.sort-btn.active');
   const sort = activeSortBtn ? activeSortBtn.getAttribute('data-sort') : 'relevance';
 
   // Build query key and reset caches if changed
-  const key = JSON.stringify({ q, sd, ed, sort, cats:[...SELECTED_CATS], tags:[...SELECTED_TAGS] });
+  const key = JSON.stringify({ q, sd, ed, minCit, maxCit, sort, cats:[...SELECTED_CATS], tags:[...SELECTED_TAGS] });
   if (CURRENT_QUERY_KEY !== key) {
     CURRENT_QUERY_KEY = key;
     RELEVANCE_CACHE.clear();
@@ -790,6 +813,16 @@ function render() {
     const d = getDate(p.published_date);
     const okS = !sd || (d && d >= new Date(sd + 'T00:00:00Z'));
     const okE = !ed || (d && d <= new Date(ed + 'T23:59:59Z'));
+    
+    // Citation count filter
+    const sem = (p.semantic_ || {});
+    const citationCount = (sem && (sem.citation_count != null)) ? sem.citation_count : (p.citation_count || 0);
+    const minCitNum = minCit ? parseInt(minCit, 10) : null;
+    const maxCitNum = maxCit ? parseInt(maxCit, 10) : null;
+    let okCit = true;
+    if (minCitNum !== null && citationCount < minCitNum) okCit = false;
+    if (maxCitNum !== null && citationCount > maxCitNum) okCit = false;
+    
     // Tag filter: match any
     let okT = true;
     if (SELECTED_TAGS.size) {
@@ -797,7 +830,7 @@ function render() {
       const labels = Array.isArray(a.labels) ? a.labels.map(x=>String(x).trim()).filter(x=>allowed.has(x)) : [];
       okT = labels.some(t => SELECTED_TAGS.has(t));
     }
-    return okQ && okC && okS && okE && okT;
+    return okQ && okC && okS && okE && okCit && okT;
   };
 
   // Analyzed: requires a valid category; null categories hidden
@@ -810,20 +843,38 @@ function render() {
   const unAnalyzedList = PAPERS.filter(p => !ANAL_MAP[p.id]).filter(p => {
     // Hide unanalyzed if other categories are selected
     if (anyOtherCatSelected && !selectedUn) return false;
-    // Unanalyzed: filter by title/author and date only
+    // Unanalyzed: filter by title/author, date, and citation count
     const textParts = [p.title, ...(p.authors||[])];
     const blob = textParts.filter(Boolean).join(' ') || '';
     const okQ = !q || blob.toLowerCase().includes(q);
     const d = getDate(p.published_date);
     const okS = !sd || (d && d >= new Date(sd + 'T00:00:00Z'));
     const okE = !ed || (d && d <= new Date(ed + 'T23:59:59Z'));
-    return okQ && okS && okE;
+    
+    // Citation count filter for unanalyzed papers
+    const sem = (p.semantic_ || {});
+    const citationCount = (sem && (sem.citation_count != null)) ? sem.citation_count : (p.citation_count || 0);
+    const minCitNum = minCit ? parseInt(minCit, 10) : null;
+    const maxCitNum = maxCit ? parseInt(maxCit, 10) : null;
+    let okCit = true;
+    if (minCitNum !== null && citationCount < minCitNum) okCit = false;
+    if (maxCitNum !== null && citationCount > maxCitNum) okCit = false;
+    
+    return okQ && okS && okE && okCit;
   });
 
   const sortByDate = (A,B) => {
     const a = getDate(A.published_date)?.getTime() || 0;
     const b = getDate(B.published_date)?.getTime() || 0;
     return sort === 'asc' ? (a - b) : (b - a);
+  };
+  
+  const sortByCitations = (A, B) => {
+    const semA = (A.semantic_ || {});
+    const semB = (B.semantic_ || {});
+    const citA = (semA && (semA.citation_count != null)) ? semA.citation_count : (A.citation_count || 0);
+    const citB = (semB && (semB.citation_count != null)) ? semB.citation_count : (B.citation_count || 0);
+    return citB - citA; // Sort in descending order, higher citations first
   };
   
   // Relevance calculation function (changed to inclusive weighted scoring)
@@ -848,7 +899,9 @@ function render() {
   };
   
   // Choose sorter based on current selection
-  const sortFunction = (sort === 'relevance') ? sortByRelevance : (sort === 'composite' ? sortByComposite : sortByDate);
+  const sortFunction = (sort === 'relevance') ? sortByRelevance : 
+                      (sort === 'composite') ? sortByComposite : 
+                      (sort === 'citations') ? sortByCitations : sortByDate;
   
   analyzedList.sort(sortFunction);
   unAnalyzedList.sort(sortFunction);
@@ -1083,10 +1136,11 @@ function updateResultsCount(analyzedCount, unAnalyzedCount, onlyUnanalyzed) {
   // Show count if there are any filters applied or search query
   const hasQuery = (document.getElementById('q').value || '').trim();
   const hasDateFilter = document.getElementById('start').value || document.getElementById('end').value;
+  const hasCitationFilter = document.getElementById('minCitations').value || document.getElementById('maxCitations').value;
   const hasCategoryFilter = SELECTED_CATS.size > 0;
   const hasTagFilter = SELECTED_TAGS.size > 0;
   
-  const hasFilters = hasQuery || hasDateFilter || hasCategoryFilter || hasTagFilter;
+  const hasFilters = hasQuery || hasDateFilter || hasCitationFilter || hasCategoryFilter || hasTagFilter;
   
   if (hasFilters || onlyUnanalyzed) {
     resultsCountEl.style.display = 'block';
