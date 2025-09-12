@@ -1,8 +1,10 @@
-## Awesome LLM-based Agent — Live Catalog
+## Awesome AI Agent Live
+
+**A live catalog of research papers on ai agents**
 
 **Live catalog:** [https://saifs-aihub.github.io/RoadMap2-LLM-Agents/](https://saifs-aihub.github.io/RoadMap2-LLM-Agents/)
 
-A lightweight, continuously-updated catalog of research papers on LLM-based autonomous agents. The site aggregates recent work (aiming for daily refresh) and provides a clean reading experience with search, filtering, category navigation, and quick detail views.
+A lightweight, continuously-updated catalog of research papers on AI agents. The site aggregates recent work (aiming for daily refresh) and provides a clean reading experience with search, filtering, category navigation, and quick detail views.
 
 ### Preview
 Two representative UI snapshots for quick reference.
