@@ -16,7 +16,7 @@ Two representative UI snapshots for quick reference.
 ### What this project is
 - **Dynamic agent paper browser**: Explore recent AI agent papers with fast keyword search and simple filters.
 - **At-a-glance insights**: Each analyzed paper includes a short summary, key insights, pros/cons, labels, and publication metadata.
-- **Practical navigation**: Switch between list and detail views, jump using the mini-TOC, and sort by relevance, recency, or a composite score.
+- **Practical navigation**: Switch between list and detail views, jump using the mini-TOC, and sort by relevance, recency, citations or a composite score.
 - **Regularly updated**: Designed to ingest new papers on a frequent cadence (daily-targeted).
 
 ### Categories and labels
