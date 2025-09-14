@@ -2,7 +2,7 @@
 
 **A live catalog of research papers on AI agents**
 
-**Live catalog:** [https://github.com/SAIFS-AIHub/Awesome-AI-Agents-Live/](https://github.com/SAIFS-AIHub/Awesome-AI-Agents-Live/)
+**Live catalog:** [https://saifs-aihub.github.io/Awesome-AI-Agents-Live/](https://saifs-aihub.github.io/Awesome-AI-Agents-Live/)
 
 A lightweight, continuously-updated catalog of research papers on AI agents. The site aggregates recent work (aiming for daily refresh) and provides a clean reading experience with search, filtering, category navigation, and quick detail views.
 
