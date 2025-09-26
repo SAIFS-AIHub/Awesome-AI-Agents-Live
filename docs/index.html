@@ -759,6 +759,14 @@ function __sd(el){
   return false;
 }
 
+// Mini TOC click handler - doesn't re-render mini TOC to preserve scroll position
+function __sdMiniToc(el){
+  const idxAttr = el && el.getAttribute && el.getAttribute('data-idx');
+  const i = idxAttr != null ? parseInt(idxAttr, 10) : NaN;
+  if (!Number.isNaN(i)) showDetailFromMiniToc(i);
+  return false;
+}
+
 function toggleCategory(cat, chipEl){
   if (SELECTED_CATS.has(cat)) SELECTED_CATS.delete(cat); else SELECTED_CATS.add(cat);
   updateChips();
@@ -1092,6 +1100,36 @@ function showDetail(index){
   updateNavButtons();
 }
 
+// Show detail without re-rendering mini TOC to preserve scroll position
+function showDetailFromMiniToc(index){
+  if (index < 0 || index >= CURRENT_LIST.length) return;
+  CURRENT_INDEX = index;
+  const p = CURRENT_LIST[index];
+  const a = ANAL_MAP[p.id] || {};
+  const cat = (a.category && String(a.category).trim()) || (p.categories && p.categories[0]) || 'Uncategorized';
+  const date = fmtDate(p.published_date);
+  const adv = Array.isArray(a.advantages) ? a.advantages : [];
+  const dis = Array.isArray(a.disadvantages) ? a.disadvantages : [];
+  const labels = Array.isArray(a.labels) ? a.labels : [];
+  const labelsBadges = labels.map(t=>{ const tt = String(t).trim(); if (METHODS_TAGS.includes(tt)) return `<span class=\"badge badge-method\">${safe(tt)}</span>`; if (APP_DOMAIN_TAGS.includes(tt)) return `<span class=\"badge badge-app\">${safe(tt)}</span>`; return ''; }).filter(Boolean).join(' ');
+      // 显示引用数量（从 semantic_ 字段获取）
+    const citationCount = (p.semantic_ && p.semantic_.citation_count != null) ? p.semantic_.citation_count : null;
+    const citationDisplay = citationCount ? `<span class="badge" style="background:#f0f9ff;color:#0369a1;border:1px solid #bae6fd;">📖 ${citationCount}</span>` : '';
+    const body = `
+      <h2>${safe(p.title)}</h2>
+      <div class="meta">${formatAuthors(p.authors)} · <span class="badge badge-cat">${safe(cat)}</span> ${labelsBadges} · ${date || ''} ${citationDisplay} · <a href="${safe(p.url)}" target="_blank">Original Link ↗</a></div>
+    <div class="section">
+      ${a.summary ? `<p><strong>Summary:</strong> ${safe(a.summary)}</p>` : ''}
+      ${Array.isArray(a.key_insights) && a.key_insights.length ? `<p><strong>Key Insights:</strong></p><ul>${a.key_insights.map(x=>`<li>${safe(x)}</li>`).join('')}</ul>` : ''}
+      ${Array.isArray(a.pros) && a.pros.length ? `<p><strong>Pros:</strong></p><ul>${a.pros.map(x=>`<li>${safe(x)}</li>`).join('')}</ul>` : ''}
+      ${Array.isArray(a.cons) && a.cons.length ? `<p><strong>Cons:</strong></p><ul>${a.cons.map(x=>`<li>${safe(x)}</li>`).join('')}</ul>` : ''}
+    </div>`;
+  document.getElementById('detailBody').innerHTML = body;
+  updateNavButtons();
+  // Only update the active state in mini TOC, don't re-render
+  highlightMiniTocActive();
+}
+
 function updateNavButtons(){
   const atStart = CURRENT_INDEX <= 0;
   const atEnd = CURRENT_INDEX >= CURRENT_LIST.length - 1;
@@ -1174,7 +1212,7 @@ function renderMiniToc(){
   let html = '<div class="mini-toc-hide-tab" onclick="hideMiniToc()" title="Hide TOC"><span class="arrow">❯</span></div><div class="mini-toc-head"><div class="mini-toc-title">Mini TOC (click to jump)</div></div><div class="mini-toc-scroll"><ul class="mini-toc-list">';
   CURRENT_LIST.forEach((p, i) => {
     const active = i === CURRENT_INDEX ? ' active' : '';
-    html += `<li class="mini-toc-item"><a href="#" class="mini-toc-link${active}" data-idx="${i}" onclick="return __sd(this)">${safe(p.title)}</a></li>`;
+    html += `<li class="mini-toc-item"><a href="#" class="mini-toc-link${active}" data-idx="${i}" onclick="return __sdMiniToc(this)">${safe(p.title)}</a></li>`;
   });
   html += '</ul></div>';
   mt.innerHTML = html;
