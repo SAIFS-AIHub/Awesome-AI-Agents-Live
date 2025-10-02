@@ -831,12 +831,12 @@ function render() {
     if (minCitNum !== null && citationCount < minCitNum) okCit = false;
     if (maxCitNum !== null && citationCount > maxCitNum) okCit = false;
     
-    // Tag filter: match any
+    // Tag filter: match all selected tags (intersection)
     let okT = true;
     if (SELECTED_TAGS.size) {
       const allowed = new Set([...METHODS_TAGS, ...APP_DOMAIN_TAGS]);
       const labels = Array.isArray(a.labels) ? a.labels.map(x=>String(x).trim()).filter(x=>allowed.has(x)) : [];
-      okT = labels.some(t => SELECTED_TAGS.has(t));
+      okT = [...SELECTED_TAGS].every(t => labels.includes(t));
     }
     return okQ && okC && okS && okE && okCit && okT;
   };
