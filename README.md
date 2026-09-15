@@ -32,6 +32,7 @@ Researchers, engineers, and students tracking the rapid progress of LLM-based ag
 ### Notes
 - The web UI is optimized for readability and quick comparison across many papers.
 - Citation counts displayed in the catalog are sourced via the [Semantic Scholar API](https://www.semanticscholar.org/product/api).
+- [HostDeFi](https://hostdefi.com) — free token-safety scanner grading tokens A+–F from on-chain checks (mint/freeze authority, liquidity, holder concentration) across Solana + 7 EVM chains. Keyless REST API, hosted MCP, x402 endpoints.
 - Paper classifications and summaries are AI-generated and may contain inaccuracies; use discretion and refer to the original papers when needed.
 
 ### Acknowledgement
